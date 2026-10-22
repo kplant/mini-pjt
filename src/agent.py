@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결 부분만 있습니다(TASKS 1-1). Agent와 Supervisor는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1)과 조율 Agent 하나(TASKS 1-2)가 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -11,7 +11,12 @@ from __future__ import annotations
 
 import os
 import time
+from datetime import date, timedelta
+from pathlib import Path
 from typing import Any
+
+from src.db import DEFAULT_DB, connect
+from src.tools import Ctx, Requester, build_tools, load_requester
 
 REGION = "us-east-1"
 
@@ -77,6 +82,93 @@ def check_models(ids: list[str] | None = None) -> list[dict]:
             results.append({"model_id": model_id, "ok": False, "latency_s": round(time.time() - start, 2),
                             "reply": "", "error": f"{type(exc).__name__}: {str(exc)[:120]}"})
     return results
+
+
+# ---------------------------------------------------------------------------
+# 조율 Agent (TASKS 1-2)
+# ---------------------------------------------------------------------------
+
+WEEKDAYS = "월화수목금토일"
+
+COORDINATION_PROMPT = """당신은 임원 일정 조율 담당입니다. 참석자 모두가 비어 있는 후보 시간을 찾아 안내합니다.
+
+규칙
+- 판정과 계산은 도구가 합니다. 후보 시간, 바쁨, 권한은 도구 결과만 믿고 직접 만들지 않습니다.
+- 도구에 사람을 넘길 때는 성명 전체(예: 강민준 부사장)를 씁니다.
+- 날짜는 아래 '날짜 안내'의 값을 YYYY-MM-DD 그대로 도구에 넘깁니다. 직접 계산하지 않습니다.
+- 회의 길이를 말하지 않으면 duration_min을 넘기지 않아 도구의 기본값을 씁니다.
+- 후보 시간은 tool_find_candidates 결과의 번호, 날짜, 시작~끝 시각을 그대로 전합니다.
+- 도구 결과에 denied, no_answer, conflict가 있으면 reason을 그대로 전하고, notice가 있으면 함께 안내합니다.
+- 일정 등록은 사용자가 후보를 고른 뒤에만 합니다.
+- 한국어로 짧게 답합니다.
+"""
+
+
+def date_hints(base: date) -> str:
+    """상대 날짜를 코드로 미리 계산해 프롬프트에 넣을 안내문을 만듭니다."""
+    def d(x: date) -> str:
+        return f"{x.isoformat()}({WEEKDAYS[x.weekday()]})"
+
+    monday = base - timedelta(days=base.weekday())
+    next_monday = monday + timedelta(days=7)
+    return (
+        "날짜 안내\n"
+        f"- 기준일(오늘): {d(base)}\n"
+        f"- 내일: {d(base + timedelta(days=1))}\n"
+        f"- 이번 주: {d(monday)} ~ {d(monday + timedelta(days=4))}\n"
+        f"- 다음 주: {d(next_monday)} ~ {d(next_monday + timedelta(days=4))}\n"
+    )
+
+
+def requester_desc(ctx: Ctx) -> str:
+    """요청자의 성명·역할·담당 임원을 한 줄로 만듭니다."""
+    req = ctx.requester
+    conn = connect(ctx.db_path)
+    try:
+        me = conn.execute("SELECT name, title FROM people WHERE id = ?", (req.id,)).fetchone()
+        line = f"요청자: {me['name']} {me['title']}({req.role})"
+        if req.role == "비서" and req.executive:
+            ex = conn.execute("SELECT name, title FROM people WHERE id = ?", (req.executive,)).fetchone()
+            line += f", 담당 임원: {ex['name']} {ex['title']}"
+        return line + "\n"
+    finally:
+        conn.close()
+
+
+def build_coordination_agent(ctx: Ctx, llm=None):
+    """조율 Agent를 만듭니다. 도구는 ctx의 요청자로 고정되어 권한을 직접 검사합니다."""
+    from langchain.agents import create_agent
+
+    prompt = COORDINATION_PROMPT + "\n" + date_hints(ctx.base_date) + "\n" + requester_desc(ctx)
+    return create_agent(
+        model=llm or make_model(model_ids()[0]),
+        tools=build_tools(ctx)["조율"],
+        system_prompt=prompt,
+    )
+
+
+def _invoke(agent, question: str) -> list:
+    """Agent를 실행하고 전체 메시지 목록을 돌려줍니다."""
+    result = agent.invoke({"messages": [{"role": "user", "content": question}]})
+    return result["messages"]
+
+
+def _to_date(value: date | str | None) -> date:
+    """기준일을 date로 바꿉니다. 없으면 오늘입니다."""
+    if value is None:
+        return date.today()
+    return value if isinstance(value, date) else date.fromisoformat(value)
+
+
+def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | None = None,
+              llm=None, db_path: Path | str = DEFAULT_DB) -> str:
+    """질문 하나를 처리해 답변 문장을 돌려줍니다. 지금은 조율 Agent 하나만 씁니다."""
+    requester: Requester | None = load_requester(user_id, db_path)
+    if requester is None:
+        return "등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다."
+    ctx = Ctx(requester, _to_date(base_date), Path(db_path))
+    messages = _invoke(build_coordination_agent(ctx, llm), question)
+    return get_text(messages[-1])
 
 
 if __name__ == "__main__":
