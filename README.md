@@ -39,6 +39,7 @@ python -m venv .venv
 .venv/Scripts/python.exe src/db.py                 # 교육용 더미 데이터로 DB 초기화
 .venv/Scripts/python.exe -m src.agent              # 후보 모델 사용 가능 여부 확인
 .venv/Scripts/python.exe evaluation/check_tools.py # 도구·권한·RAG 검사(LLM 호출 없음)
+.venv/Scripts/python.exe evaluation/run_eval.py   # 평가셋 24문항 실행·판정(--runs 3, --ids m-01,m-04)
 ```
 질의 한 번(지금 단계):
 ```bash

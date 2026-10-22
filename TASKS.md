@@ -68,7 +68,7 @@
   - 확인: m-13 결과의 `answer`에는 010-1234-5678, `trace`에는 마스킹된 번호
 
 ## 5. 평가
-- [ ] 5-1 평가 실행기: CSV 읽기, 문항마다 `reset_db()`, `turns` 처리, `expect`를 코드로 판정 (새 파일 `evaluation/run_eval.py`는 이 작업 시작 때 확인받기)
+- [x] 5-1 평가 실행기: CSV 읽기, 문항마다 `reset_db()`, `turns` 처리, `expect`를 코드로 판정 (새 파일 `evaluation/run_eval.py`는 이 작업 시작 때 확인받기)
   - 확인: 24문항을 1회 돌리면 문항별 PASS/FAIL 표가 출력됨
 - [ ] 5-2 RAGAS 측정: requirements에 ragas 추가(사용자 승인), 평가자는 Bedrock 모델과 Titan 임베딩. 근거 문서가 있는 문항(소개 자료 RAG, 조회·브리핑)에 context_recall·context_precision·faithfulness·answer_relevancy 적용. Python 3.14 호환은 이때 확인
   - 확인: 4개 지표 값이 한 번의 실행으로 출력되고 라운드 리포트에 들어감
