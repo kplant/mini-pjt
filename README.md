@@ -33,6 +33,8 @@ POST /query (src/app.py)
 ```bash
 python -m venv .venv
 .venv/Scripts/python.exe -m pip install -r requirements.txt   # macOS/Linux: .venv/bin/python
+# Python 3.14: ragas의 의존 패키지 scikit-network가 빌드되지 않으므로, 위 설치가 실패하면 ragas 줄을 빼고 설치한 뒤
+#   .venv/Scripts/python.exe -m pip install ragas==0.4.3 --no-deps 후 datasets tiktoken instructor diskcache appdirs nest-asyncio typer langchain_openai 설치
 
 # .env: AWS 자격 증명(Bedrock, us-east-1). 선택: BEDROCK_MODEL_IDS=모델1,모델2,...(후보 순서 덮어쓰기)
 
@@ -40,6 +42,7 @@ python -m venv .venv
 .venv/Scripts/python.exe -m src.agent              # 후보 모델 사용 가능 여부 확인
 .venv/Scripts/python.exe evaluation/check_tools.py # 도구·권한·RAG 검사(LLM 호출 없음)
 .venv/Scripts/python.exe evaluation/run_eval.py   # 평가셋 24문항 실행·판정(--runs 3, --ids m-01,m-04)
+.venv/Scripts/python.exe evaluation/run_eval.py --ragas   # RAGAS 4개 지표 함께 계산(조회·브리핑, 소개 자료 RAG 문항)
 ```
 질의 한 번(지금 단계):
 ```bash

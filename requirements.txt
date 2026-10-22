@@ -28,3 +28,6 @@ langchain-mcp-adapters==0.3.2
 # 서버 (Mini PJT)
 fastapi
 uvicorn
+
+# 평가 (Mini PJT)
+ragas==0.4.3

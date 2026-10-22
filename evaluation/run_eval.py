@@ -1,6 +1,7 @@
 """평가셋(evaluation/test_queries.csv)을 실행하고 expect를 코드로 판정합니다.
 
-실행: python evaluation/run_eval.py [--runs 1] [--ids m-01,m-04]
+실행: python evaluation/run_eval.py [--runs 1] [--ids m-01,m-04] [--ragas]
+--ragas를 주면 근거 문서가 있는 문항(RAGAS_REFERENCES)의 응답으로 RAGAS 4개 지표도 계산합니다(TASKS 5-2).
 문항마다 DB를 초기화하고 새 thread_id로 보냅니다. turns가 있으면 같은 thread_id로 차례로 보내고 마지막 응답으로 판정합니다.
 route·refused·후보 시간·승인 대기는 응답 trace의 decision 단계에서, 나머지는 실행 후 DB 상태로 판정합니다
 (evaluation/eval-fixtures.md의 '판정 필드').
@@ -8,9 +9,12 @@ route·refused·후보 시간·승인 대기는 응답 trace의 decision 단계�
 import argparse
 import csv
 import json
+import os
 import sys
 import time
+import types
 import uuid
+import warnings
 from datetime import datetime
 from pathlib import Path
 
@@ -26,6 +30,26 @@ LIMIT_S = 10  # 요청 하나의 응답 시간 기준(SERVICE.md 5번)
 
 # SERVICE.md 5번 성공 기준
 MIN_ACCURACY, MIN_GUARDRAIL, MIN_ROUTING = 22, 4, 18
+
+# RAGAS 대상(근거 문서가 있는 문항: 조회·브리핑, 소개 자료 RAG)과 정답 문장.
+# eval-fixtures.md와 data/*.md에 적힌 사실로만 씁니다. context_recall·context_precision이 이 문장을 기준으로 봅니다.
+RAGAS_REFERENCES = {
+    "m-01": "10월 27일 강민준 부사장의 일정은 09:00~10:00 주간 경영회의, 14:00~15:00 바쁨(비공개 일정), "
+            "16:00~17:00 ABC사 미팅이다.",
+    "m-02": "10월 27일 강민준 부사장의 일정은 09:00~10:00 주간 경영회의, 14:00~15:00 건강검진, "
+            "16:00~17:00 ABC사 미팅이다.",
+    "m-03": "10월 29일(목) 윤서연 전무의 일정은 10:00~11:00 인사위원회, 14:00~15:00 바쁨(비공개 일정)이다.",
+    "m-22": "ABC사는 반도체 장비 제조사이고, 박정우 대표는 반도체 장비 업계에서 25년간 일했으며 "
+            "2019년에 ABC사 대표로 취임했다.",
+    "m-23": "고은비 교수의 연구 분야는 배터리 소재, 특히 전고체 배터리의 고체 전해질이다.",
+}
+# ragas 결과 키 → TASKS의 지표 이름
+RAGAS_METRICS = {
+    "context_recall": "context_recall",
+    "llm_context_precision_with_reference": "context_precision",
+    "faithfulness": "faithfulness",
+    "answer_relevancy": "answer_relevancy",
+}
 
 
 def load_cases(ids: list[str] | None = None) -> list[dict]:
@@ -148,10 +172,12 @@ def evaluate(cases: list[dict]) -> list[dict]:
     for case in cases:
         run = run_case(case)
         fails = judge_case(case, run)
-        d = decision(run["response"]["trace"]) if run["response"] else {}
+        resp = run["response"] or {}
+        d = decision(resp["trace"]) if resp else {}
         results.append({"id": case["id"], "type": case["type"], "route": d.get("route"),
                         "expected_route": case["expected_route"], "turns": len(case["turns"]),
-                        "latencies": run["latencies"], "fails": fails})
+                        "latencies": run["latencies"], "fails": fails, "question": case["turns"][-1],
+                        "answer": resp.get("answer", ""), "contexts": [c["text"] for c in resp.get("contexts", [])]})
         print(f"  {case['id']} {'PASS' if not fails else 'FAIL'} {run['latencies']}", flush=True)
     db.reset_db()
     return results
@@ -185,6 +211,70 @@ def meets(s: dict) -> dict:
     }
 
 
+def _import_ragas():
+    """ragas를 import합니다.
+
+    ragas 0.4.3은 langchain-community 0.4에서 빠진 chat_models.vertexai를 import하므로 빈 모듈로 채웁니다
+    (Vertex AI는 쓰지 않습니다). 사용 통계 전송은 끄고, 사용 중단 예고 경고는 숨깁니다.
+    Python 3.14에서는 scikit-network(평가셋 생성 기능에만 쓰임)가 빌드되지 않아 ragas를 --no-deps로 설치합니다(README).
+    """
+    os.environ.setdefault("RAGAS_DO_NOT_TRACK", "true")
+    name = "langchain_community.chat_models.vertexai"
+    if name not in sys.modules:
+        stub = types.ModuleType(name)
+        stub.ChatVertexAI = type("ChatVertexAI", (), {})
+        sys.modules[name] = stub
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    import ragas
+
+    return ragas
+
+
+def ragas_scores(results: list[dict]) -> dict:
+    """RAGAS 대상 문항의 응답으로 4개 지표를 계산합니다. 반환: {"mean": {지표: 값}, "per_case": {id: {지표: 값}}}
+
+    평가 모델은 Agent와 같은 첫 후보(Sonnet), 임베딩은 Titan입니다. 질문을 다시 보내지 않고 받은 응답을 그대로 씁니다.
+    """
+    _import_ragas()
+    from ragas import EvaluationDataset, evaluate as ragas_evaluate
+    from ragas.embeddings import LangchainEmbeddingsWrapper
+    from ragas.llms import LangchainLLMWrapper
+    from ragas.metrics import Faithfulness, LLMContextPrecisionWithReference, LLMContextRecall, ResponseRelevancy
+    from src.agent import make_model, model_ids
+    from src.retriever import _default_embeddings
+
+    targets = [r for r in results if r["id"] in RAGAS_REFERENCES]
+    if not targets:
+        return {"mean": {}, "per_case": {}}
+    dataset = EvaluationDataset.from_list([{
+        "user_input": r["question"], "response": r["answer"],
+        "retrieved_contexts": r["contexts"] or [""], "reference": RAGAS_REFERENCES[r["id"]],
+    } for r in targets])
+    scored = ragas_evaluate(
+        dataset,
+        metrics=[LLMContextRecall(), LLMContextPrecisionWithReference(), Faithfulness(), ResponseRelevancy()],
+        llm=LangchainLLMWrapper(make_model(model_ids()[0])),
+        embeddings=LangchainEmbeddingsWrapper(_default_embeddings()),
+        show_progress=False,
+    )
+    per_case = {r["id"]: {RAGAS_METRICS[k]: round(float(v), 3) for k, v in row.items() if k in RAGAS_METRICS}
+                for r, row in zip(targets, scored.scores)}
+    mean = {name: round(sum(c[name] for c in per_case.values()) / len(per_case), 3) for name in RAGAS_METRICS.values()}
+    return {"mean": mean, "per_case": per_case}
+
+
+def print_ragas(all_scores: list[dict]) -> None:
+    """RAGAS 지표를 회차별 평균 표와 문항별 표로 출력합니다."""
+    print("\n| RAGAS 지표 | " + " | ".join(f"{i + 1}회" for i in range(len(all_scores))) + " |")
+    print("|---" * (len(all_scores) + 1) + "|")
+    for name in RAGAS_METRICS.values():
+        print(f"| {name} | " + " | ".join(str(s["mean"].get(name, "-")) for s in all_scores) + " |")
+    print("\n| 문항(마지막 회차) | " + " | ".join(RAGAS_METRICS.values()) + " |")
+    print("|---" * (len(RAGAS_METRICS) + 1) + "|")
+    for cid, row in all_scores[-1]["per_case"].items():
+        print(f"| {cid} | " + " | ".join(str(row[n]) for n in RAGAS_METRICS.values()) + " |")
+
+
 def print_table(results: list[dict]) -> None:
     """문항별 PASS/FAIL 표를 출력합니다."""
     print(f"| {'id':<5} | {'type':<12} | 결과 | {'route':<4} | 최대 응답(초) | 실패 이유")
@@ -212,16 +302,23 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="평가셋 실행과 판정")
     parser.add_argument("--runs", type=int, default=1, help="전체 실행 횟수")
     parser.add_argument("--ids", default="", help="쉼표로 구분한 문항 id(비우면 전체)")
+    parser.add_argument("--ragas", action="store_true", help="RAGAS 4개 지표도 계산(근거 문서가 있는 문항)")
     args = parser.parse_args()
     cases = load_cases([i.strip() for i in args.ids.split(",") if i.strip()])
-    summaries = []
+    summaries, all_scores = [], []
     for n in range(args.runs):
         print(f"\n## {n + 1}회차 ({len(cases)}문항)", flush=True)
         results = evaluate(cases)
         print()
         print_table(results)
         summaries.append(summarize(results))
+        if args.ragas:
+            start = time.time()
+            all_scores.append(ragas_scores(results))
+            print(f"\n(RAGAS 계산 {time.time() - start:.1f}초)", flush=True)
     print_summary(summaries)
+    if all_scores:
+        print_ragas(all_scores)
 
 
 if __name__ == "__main__":
