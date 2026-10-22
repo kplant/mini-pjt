@@ -56,7 +56,7 @@
   - 확인: m-01, m-02, m-03의 must_include / must_not_include 통과
 - [ ] 3-3 일정 Agent: 변경·취소·불참·승인 처리
   - 확인: m-08~m-12 실행 후 DB 상태가 `expect`와 일치
-- [ ] 3-4 일정 Agent: 프로필 조회·외부 인물 등록·소개 자료 검색(`contexts` 채움)
+- [ ] 3-4 일정 Agent: 프로필 조회·외부 인물 등록·소개 자료 검색(`contexts` 채움, 검색 trace 단계 이름은 스펙 예시대로 `retrieve`)
   - 확인: m-13, m-14, m-20, m-22~m-24 통과, m-22의 `contexts`에 `doc_id="ext_park_abc.md"`
 - [ ] 3-5 관리 Agent: 담당 관계 조회·변경 (시간이 모자라면 가장 먼저 뺌)
   - 확인: m-15 실행 후 `sec-jung`의 담당 임원이 `exec-han`

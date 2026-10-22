@@ -39,6 +39,8 @@ mini-pjt_{본인이름}/
 ## 이 프로젝트의 적용
 - 요청 본문은 `question`이 필수이고, `user_id`(기본 `sec-kim`), `thread_id`, `base_date`(기본 오늘)는 선택이다(`src/app.py`).
 - `trace`는 route → 도구 호출 → `decision` 단계 순서다. 평가 판정 값은 마지막 `decision` 단계에 담는다.
+- 스펙의 `retrieve`는 예시로 보고 형식(`step`·`input`·`output`)만 맞춘다. 다만 소개 자료 검색 단계는 이름을 `retrieve`로 한다(TASKS 3-4).
+- 평가 리포트는 `round1_report.md`부터 라운드마다 새로 남기고, 마지막 `roundN_report.md`를 제출한다. 반드시 `round2_report.md`에서 끝낼 필요는 없다(2026-10-22 사용자 확인).
 - 폴더 이름 `mini-pjt_김상열`로 바꾸는 일은 TASKS 6-2에서 한다.
 - Dockerfile과 run.sh는 선택이지만 둘 다 만든다(TASKS 6-3, 6-4).
 - 스펙에 없는 파일(CLAUDE.md, CONTEXT.md, TASKS.md, docs/, plan/)도 그대로 둔다.
