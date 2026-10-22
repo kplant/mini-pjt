@@ -73,12 +73,12 @@ GHI사(송재원 이사)의 소개 문서는 **만들지 않습니다**. m-24에
 | `question` | 한 번만 보내는 요청. `turns`가 있으면 비어 있음 |
 | `turns` | JSON 배열 문자열 |
 | `expected_route` | 비어 있으면 검사하지 않음 |
-| `expected_source` | RAG 문항에서 `contexts`에 들어 있어야 할 문서 파일명 |
+| `expected_source` | RAG 문항에서 `contexts`의 `doc_id`로 들어 있어야 할 문서 파일명 |
 | `expect` | JSON 객체 문자열. 아래 판정 필드 |
 
 ## 판정 필드
 
-`route`, `refused`, 후보 시간, 승인 대기는 응답의 `trace` 안에서 읽습니다.
+`route`, `refused`, 후보 시간, 승인 대기는 응답 `trace`의 마지막 `decision` 단계에서 읽습니다. `trace`는 `[{step, input, output}]` 단계 목록입니다.
 
 | 필드 | 뜻 |
 |---|---|

@@ -155,8 +155,8 @@ def _invoke(agent, question: str) -> list:
 
 
 # ---------------------------------------------------------------------------
-# 응답 형식 (TASKS 1-3): answer / contexts / trace
-# trace는 모델의 답변 문장이 아니라 도구 결과만으로 정합니다.
+# 응답 형식 (TASKS 1-3, 1-4): answer / contexts[{doc_id, text}] / trace[{step, input, output}]
+# 판정 값은 모델의 답변 문장이 아니라 도구 결과만으로 정하고, trace의 decision 단계에 담습니다.
 # ---------------------------------------------------------------------------
 
 def collect_tool_calls(messages: list, agent_name: str) -> list[dict]:
@@ -184,8 +184,8 @@ def _merge_unique(calls: list[dict], key: str) -> list:
     return out
 
 
-def build_trace(calls: list[dict], route: str | None, model_id: str | None, latency_s: float) -> dict:
-    """도구 결과로 trace를 만듭니다. 판정은 모두 도구가 돌려준 값으로 합니다."""
+def judge(calls: list[dict], route: str | None, model_id: str | None, latency_s: float) -> dict:
+    """도구 결과로 판정 값을 만듭니다. 모델의 답변 문장은 보지 않습니다."""
     candidate_calls = [c for c in calls if c["tool"] == "tool_find_candidates"]
     return {
         "route": route,
@@ -194,18 +194,38 @@ def build_trace(calls: list[dict], route: str | None, model_id: str | None, late
         "candidates": candidate_calls[-1]["result"].get("candidates", []) if candidate_calls else [],
         "registered_for": _merge_unique(calls, "registered_for"),
         "pending_approvals": _merge_unique(calls, "pending_approval_for"),
-        "tool_calls": calls,
         "model": model_id,
         "latency_s": round(latency_s, 2),
     }
 
 
+def _step(step: str, input_: Any, output: Any) -> dict:
+    """trace 단계 하나. 제출 스펙대로 step·input·output 세 키만 둡니다."""
+    return {"step": step, "input": input_, "output": output}
+
+
+def build_trace(question: str, calls: list[dict], verdict: dict) -> list[dict]:
+    """trace를 단계 목록으로 만듭니다: route → 도구 호출들 → decision(판정 값)."""
+    steps = [_step("route", question, verdict["route"])]
+    steps += [_step(f"{c['agent']}.{c['tool']}", c["args"], c["result"]) for c in calls]
+    steps.append(_step("decision", "도구 결과로 판정", verdict))
+    return steps
+
+
+def decision(trace: list[dict]) -> dict:
+    """trace에서 decision 단계의 판정 값을 꺼냅니다. 평가기와 테스트가 씁니다."""
+    for s in reversed(trace):
+        if s["step"] == "decision":
+            return s["output"]
+    return {}
+
+
 def build_contexts(calls: list[dict]) -> list[dict]:
-    """답변의 근거가 된 도구 결과를 [{source, content}]로 담습니다."""
-    return [{"source": c["tool"], "content": json.dumps(c["result"], ensure_ascii=False)} for c in calls]
+    """답변의 근거가 된 도구 결과를 [{doc_id, text}]로 담습니다."""
+    return [{"doc_id": c["tool"], "text": json.dumps(c["result"], ensure_ascii=False)} for c in calls]
 
 
-def _result(answer: str, contexts: list[dict], trace: dict) -> dict:
+def _result(answer: str, contexts: list[dict], trace: list[dict]) -> dict:
     """응답 dict를 만듭니다. 제출 규약의 세 키 말고는 넣지 않습니다."""
     return {"answer": answer, "contexts": contexts, "trace": trace}
 
@@ -219,19 +239,25 @@ def _to_date(value: date | str | None) -> date:
 
 def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | None = None,
               llm=None, db_path: Path | str = DEFAULT_DB) -> dict:
-    """질문 하나를 처리해 {"answer", "contexts", "trace"}를 돌려줍니다. 지금은 조율 Agent 하나만 씁니다."""
+    """질문 하나를 처리해 제출 스펙의 응답을 돌려줍니다. 지금은 조율 Agent 하나만 씁니다.
+
+    반환: {"answer": str,
+           "contexts": [{"doc_id", "text"}],
+           "trace": [{"step", "input", "output"}]}  # 마지막 decision 단계에 판정 값
+    """
     start = time.time()
     requester: Requester | None = load_requester(user_id, db_path)
     if requester is None:
-        trace = build_trace([], None, None, time.time() - start)
-        trace["refused"] = True
+        verdict = judge([], None, None, time.time() - start)
+        verdict["refused"] = True
+        trace = [_step("auth", user_id, "등록되지 않은 사용자"), _step("decision", "요청자 확인", verdict)]
         return _result("등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다.", [], trace)
     ctx = Ctx(requester, _to_date(base_date), Path(db_path))
     model_id = "injected" if llm is not None else model_ids()[0]
     messages = _invoke(build_coordination_agent(ctx, llm), question)
     calls = collect_tool_calls(messages, "조율")
-    trace = build_trace(calls, "조율", model_id, time.time() - start)
-    return _result(get_text(messages[-1]), build_contexts(calls), trace)
+    verdict = judge(calls, "조율", model_id, time.time() - start)
+    return _result(get_text(messages[-1]), build_contexts(calls), build_trace(question, calls, verdict))
 
 
 if __name__ == "__main__":
