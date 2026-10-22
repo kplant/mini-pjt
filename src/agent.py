@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1)이 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3)가 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -14,6 +14,7 @@ import os
 import sqlite3
 import time
 from datetime import date, timedelta
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,7 @@ from src.db import DB_DIR, DEFAULT_DB, connect
 from src.tools import Ctx, Requester, build_tools, load_requester
 
 REGION = "us-east-1"
+MODEL_MAX_RETRIES = 2
 CHECKPOINT_DB = DB_DIR / "checkpoints.sqlite"
 
 # 앞에서부터 차례로 씁니다.
@@ -51,13 +53,18 @@ def model_ids() -> list[str]:
     return ids or list(MODEL_IDS)
 
 
+@lru_cache(maxsize=None)
 def make_model(model_id: str):
-    """Bedrock 채팅 모델 하나를 만듭니다. 판정을 흔들지 않도록 temperature는 0입니다."""
+    """Bedrock 채팅 모델 하나를 만듭니다. 판정을 흔들지 않도록 temperature는 0입니다.
+
+    같은 ID는 한 번만 만들어 재사용합니다. 재시도를 줄여 실패하면 다음 후보로 빨리 넘어가게 합니다.
+    """
     from dotenv import load_dotenv
     from langchain_aws import ChatBedrockConverse
 
     load_dotenv()
-    return ChatBedrockConverse(model=model_id, region_name=REGION, temperature=0)
+    return ChatBedrockConverse(model=model_id, region_name=REGION, temperature=0,
+                               max_retries=MODEL_MAX_RETRIES)
 
 
 def get_text(message: Any) -> str:
@@ -161,16 +168,33 @@ def build_coordination_agent(ctx: Ctx, llm=None, checkpointer=None):
     """조율 Agent를 만듭니다. 도구는 ctx의 요청자로 고정되어 권한을 직접 검사합니다.
 
     checkpointer가 있으면 thread_id별로 대화를 이어 갑니다. 시스템 프롬프트는 대화 상태에 저장되지 않아 매 턴 새로 만듭니다.
+    llm을 주입하지 않으면 첫 후보 모델로 시작하고, 실패하면 ModelFallbackMiddleware가 다음 후보로 넘어갑니다.
     """
     from langchain.agents import create_agent
+    from langchain.agents.middleware import ModelFallbackMiddleware
 
     prompt = COORDINATION_PROMPT + "\n" + date_hints(ctx.base_date) + "\n" + requester_desc(ctx)
+    middleware = []
+    if llm is None:
+        ids = model_ids()
+        llm = make_model(ids[0])
+        if len(ids) > 1:
+            middleware.append(ModelFallbackMiddleware(*[make_model(i) for i in ids[1:]]))
     return create_agent(
-        model=llm or make_model(model_ids()[0]),
+        model=llm,
         tools=build_tools(ctx)["조율"],
         system_prompt=prompt,
         checkpointer=checkpointer,
+        middleware=middleware,
     )
+
+
+def answered_model(messages: list) -> str | None:
+    """이번 턴에서 마지막으로 답한 모델 ID를 돌려줍니다. 대체가 일어나면 바뀐 모델이 나옵니다."""
+    for m in reversed(messages):
+        if getattr(m, "type", "") == "ai":
+            return m.response_metadata.get("model_name")
+    return None
 
 
 def _invoke(agent, question: str, config: dict | None = None) -> list:
@@ -303,13 +327,13 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
         trace = [_step("auth", user_id, "등록되지 않은 사용자"), _step("decision", "요청자 확인", verdict)]
         return _result("등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다.", [], trace)
     ctx = Ctx(requester, _to_date(base_date), Path(db_path))
-    model_id = "injected" if llm is not None else model_ids()[0]
     checkpointer, config = None, None
     if thread_id:
         checkpointer = _checkpointer()
         config = {"configurable": {"thread_id": f"{user_id}:{thread_id}"}}
     messages = _invoke(build_coordination_agent(ctx, llm, checkpointer), question, config)
     calls = collect_tool_calls(messages, "조율")
+    model_id = answered_model(messages) or ("injected" if llm is not None else model_ids()[0])
     verdict = judge(calls, "조율", model_id, time.time() - start)
     answer = ensure_notices(get_text(messages[-1]), calls)
     return _result(answer, build_contexts(calls), build_trace(question, calls, verdict))

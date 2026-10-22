@@ -46,7 +46,7 @@
   - 확인: m-07 두 턴 뒤 `registered_for=[exec-kang]`, `pending_approval_for=[exec-yoon]`
 - [x] 2-2 직원·외부 참석자와 후보 없음 안내
   - 확인: m-05(30분), m-06("외부" 안내), m-21(`no_answer`, 후보 0개) 통과
-- [ ] 2-3 모델 대체: `ModelFallbackMiddleware`로 후보 순서대로 자동 전환
+- [x] 2-3 모델 대체: `ModelFallbackMiddleware`로 후보 순서대로 자동 전환
   - 확인: `BEDROCK_MODEL_IDS`의 첫 값을 없는 ID로 바꾸면 decision 단계의 `model`이 다음 후보로 바뀜
 
 ## 3. Supervisor와 하위 Agent
