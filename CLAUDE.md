@@ -39,3 +39,22 @@ evaluation/        test_queries.csv 와 평가 리포트
 - 계산, 규칙 판정은 LLM이 아니라 파이썬 코드로 하는 원칙으로 진행한다. 필요시 LLM 판정부분을 덧붙여 추가한다.
 
 - API 키는 .env에서 읽는다.
+
+## 세션 시작 시
+- TASKS.md에서 첫 번째 `[ ]` 작업이 다음 작업이다. 직전 작업의 결과는 plan/task-N-N.md 끝의 "결과"에 있다.
+- 공식 제출 스펙(API 형식, 산출물 구조)은 docs/submission-spec.md에 있다.
+
+## 작업 흐름
+- 계획 → 승인 → plan/task-N-N.md에 저장 → 구현 → TASKS의 "확인" 통과 → `[x]` → plan 파일 끝에 결과(계획과 달라진 점) 추가 → commit `TASKS N-N: 요약`
+- 계획이 바뀌면 plan 파일을 최종본으로 덮어쓴다. push는 요청할 때만 한다.
+- commit 전에 .env, chroma_db/, schedule.sqlite가 빠지는지 확인한다.
+- 요청하지 않은 파일이 필요하면 경로와 목적을 먼저 묻는다(임시 폴더에 몰래 만들지 않는다).
+- 테스트 보고: 실행한 명령, 출력 원문, 읽는 법, PowerShell 재현 명령을 함께 보여 준다.
+- 답변은 한국어로 한다. 명령·출력 원문은 그대로 둔다.
+
+## 개발 환경
+- Windows. Python은 `.venv/Scripts/python.exe`(3.14)를 쓴다.
+- `.env`의 BEDROCK_MODEL_IDS가 global Sonnet 4.5를 1순위로 덮어쓴다(us는 스로틀링). decision 단계의 model이 global로 나오는 것은 정상이다.
+- 서버 확인: uvicorn을 백그라운드로 띄우고 curl을 보낸 뒤 종료한다. Git Bash에서 한글 본문은 UTF-8 파일로 만들어 `--data-binary @파일`로 보낸다(`-d '...'`로 바로 넣으면 400).
+- m-04 응답은 약 8초다(기준 10초).
+- 회귀 검사: `evaluation/check_tools.py`가 35개 PASS여야 한다.
