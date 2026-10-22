@@ -17,7 +17,7 @@
 
 ## 아키텍처
 ```
-POST /query (src/app.py, 구현 예정: TASKS 1-5)
+POST /query (src/app.py)
   └ run_query (src/agent.py): 요청자 확인(사용자 목록) → Supervisor
        ├ 조율 Agent: 후보 시간 · 바쁨 · 등록
        ├ 일정 Agent: 조회 · 브리핑 · 변경 · 승인 · 프로필 · 소개 자료 검색(src/retriever.py)
@@ -27,7 +27,7 @@ POST /query (src/app.py, 구현 예정: TASKS 1-5)
 ```
 - 권한은 프롬프트가 아니라 도구 코드가 SQLite에서 읽은 뒤 걸러서 넘긴다. 권한 밖의 데이터는 도구 밖으로 나가지 않는다([ADR 0003](docs/adr/0003-supervisor-구조-권한은-도구-계층.md)).
 - 평가 판정 값(route, refused, candidates, pending_approvals, model, latency_s)은 trace의 마지막 `decision` 단계에 담는다.
-- 현재 구현 범위: 조율 Agent 하나로 질문부터 응답까지(TASKS 1-4까지).
+- 현재 구현 범위: 서버와 조율 Agent 하나로 질문부터 응답까지(TASKS 1-5까지).
 
 ## 실행 방법
 ```bash
@@ -44,13 +44,14 @@ python -m venv .venv
 ```bash
 .venv/Scripts/python.exe -c "import json; from src.agent import run_query; print(json.dumps(run_query('다음 주에 강민준 부사장님과 윤서연 전무님 1시간 회의 잡아줘', 'sec-kim', '2026-10-26'), ensure_ascii=False, indent=2))"
 ```
-서버(구현 예정: TASKS 1-5):
+서버:
 ```bash
-uvicorn src.app:app --port 8000
+.venv/Scripts/python.exe -m uvicorn src.app:app --port 8000
 curl -X POST localhost:8000/query -H "Content-Type: application/json" \
      -d '{"question": "다음 주에 강민준 부사장님과 윤서연 전무님 1시간 회의 잡아줘", "user_id": "sec-kim", "base_date": "2026-10-26"}'
 ```
-요청 본문은 `question`이 필수이고, `user_id`(기본 `sec-kim`), `thread_id`, `base_date`(기본 오늘)는 선택이다.
+요청 본문은 `question`이 필수이고, `user_id`(기본 `sec-kim`), `thread_id`, `base_date`(기본 오늘)는 선택이다. `thread_id`는 대화 기억(TASKS 2-1)부터 쓰인다.
+Windows Git Bash에서 한글을 `-d`로 바로 넣으면 UTF-8이 아니게 넘어가 400이 난다. 본문을 UTF-8 파일로 저장해 `--data-binary @m04.json`으로 보내거나, PowerShell에서는 `Invoke-WebRequest ... -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))`로 보낸다.
 
 ## RAGAS 평가 결과
 측정 전(TASKS 5-2). 대상은 근거 문서가 있는 문항(소개 자료 RAG, 조회·브리핑)이다.
