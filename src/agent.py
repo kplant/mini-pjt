@@ -100,6 +100,7 @@ COORDINATION_PROMPT = """당신은 임원 일정 조율 담당입니다. 참석�
 - 도구에 사람을 넘길 때는 성명 전체(예: 강민준 부사장)를 씁니다.
 - 날짜는 아래 '날짜 안내'의 값을 YYYY-MM-DD 그대로 도구에 넘깁니다. 직접 계산하지 않습니다.
 - 회의 길이를 말하지 않으면 duration_min을 넘기지 않아 도구의 기본값을 씁니다.
+- 참석자는 요청에 나온 사람만으로 정하고 되묻지 않습니다. 한 명만 나와도 그 사람으로 바로 후보 시간을 찾습니다.
 - 후보 시간은 tool_find_candidates 결과의 번호, 날짜, 시작~끝 시각을 그대로 전합니다.
 - 도구 결과에 denied, no_answer, conflict가 있으면 reason을 그대로 전하고, notice가 있으면 함께 안내합니다.
 - 일정 등록은 사용자가 후보를 고른 뒤에만 합니다.
@@ -227,6 +228,22 @@ def judge(calls: list[dict], route: str | None, model_id: str | None, latency_s:
     }
 
 
+def ensure_notices(answer: str, calls: list[dict]) -> str:
+    """도구가 준 안내(notice)와 찾는 대상이 없는 이유(no_answer의 reason)가 답변에 빠졌으면 끝에 덧붙입니다.
+
+    문구는 도구 결과 그대로 쓰고, 모델의 답변 문장은 고치지 않습니다.
+    """
+    lines = []
+    for c in calls:
+        texts = [c["result"].get("notice")]
+        if c["result"].get("no_answer"):
+            texts.append(c["result"].get("reason"))
+        for t in texts:
+            if t and t not in answer and t not in lines:
+                lines.append(t)
+    return "\n\n".join([answer, *lines]) if lines else answer
+
+
 def _step(step: str, input_: Any, output: Any) -> dict:
     """trace 단계 하나. 제출 스펙대로 step·input·output 세 키만 둡니다."""
     return {"step": step, "input": input_, "output": output}
@@ -293,7 +310,8 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
     messages = _invoke(build_coordination_agent(ctx, llm, checkpointer), question, config)
     calls = collect_tool_calls(messages, "조율")
     verdict = judge(calls, "조율", model_id, time.time() - start)
-    return _result(get_text(messages[-1]), build_contexts(calls), build_trace(question, calls, verdict))
+    answer = ensure_notices(get_text(messages[-1]), calls)
+    return _result(answer, build_contexts(calls), build_trace(question, calls, verdict))
 
 
 if __name__ == "__main__":
