@@ -476,22 +476,27 @@ def _delete_event(conn, event_id: str) -> None:
     conn.execute("DELETE FROM events WHERE id = ?", (event_id,))
 
 
-def update_event(ctx: Ctx, event_id: str, new_start: str, new_end: str) -> dict:
+def update_event(ctx: Ctx, event_id: str, new_start: str, new_end: str | None = None) -> dict:
     """일정 시간을 바꿉니다. 주최 임원 쪽만 할 수 있습니다.
 
     임원 본인이 바꾸면 바로 반영하고, 비서가 바꾸면 담당 임원의 승인을 기다립니다.
+    new_end를 비우면 원래 일정 길이를 그대로 둡니다.
     """
     req = ctx.requester
     if req.role not in ("임원", "비서"):
         return _denied("일정은 임원과 담당 비서만 바꿀 수 있습니다.")
-    start_dt, end_dt = _parse_dt(new_start), _parse_dt(new_end)
-    if end_dt <= start_dt:
-        return {"error": "끝나는 시간이 시작 시간보다 늦어야 합니다."}
     conn = ctx.conn()
     try:
         ev = _get_event(conn, event_id)
         if ev is None:
             return {"not_found": True, "reason": f"일정 {event_id}을(를) 찾을 수 없습니다."}
+        start_dt = _parse_dt(new_start)
+        if new_end:
+            end_dt = _parse_dt(new_end)
+        else:
+            end_dt = start_dt + (_parse_dt(ev["end"]) - _parse_dt(ev["start"]))
+        if end_dt <= start_dt:
+            return {"error": "끝나는 시간이 시작 시간보다 늦어야 합니다."}
         if not _can_act_for(req, ev["host"]):
             return _not_host_reason(conn, req, ev)
         clash = [s for s, e, eid in _busy_blocks(conn, ev["host"])
@@ -763,8 +768,9 @@ def build_tools(ctx: Ctx) -> dict[str, list]:
         return out(get_event_at(ctx, executive, at))
 
     @tool
-    def tool_update_event(event_id: str, new_start: str, new_end: str) -> str:
-        """일정 시간을 바꿉니다. 주최 임원 쪽만 가능하며, 비서의 변경은 승인 대기가 됩니다."""
+    def tool_update_event(event_id: str, new_start: str, new_end: str | None = None) -> str:
+        """일정 시간을 바꿉니다. 주최 임원 쪽만 가능하며, 비서의 변경은 승인 대기가 됩니다.
+        new_start/new_end는 'YYYY-MM-DDTHH:MM'. 끝 시각을 말하지 않았으면 new_end를 비워 원래 길이를 유지합니다."""
         return out(update_event(ctx, event_id, new_start, new_end))
 
     @tool

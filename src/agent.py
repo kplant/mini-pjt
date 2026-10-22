@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1, Haiku 1순위), 일정 Agent 조회·브리핑(TASKS 3-2)이 있습니다. 일정 변경·프로필과 관리 Agent는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1, Haiku 1순위), 일정 Agent 조회·브리핑(TASKS 3-2)과 변경·승인(TASKS 3-3)이 있습니다. 프로필·검색과 관리 Agent는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -221,7 +221,7 @@ def build_coordination_agent(ctx: Ctx, llm=None, checkpointer=None):
 # 일정 Agent (TASKS 3-2~)
 # ---------------------------------------------------------------------------
 
-SCHEDULE_PROMPT = """당신은 임원 일정 담당입니다. 임원의 일정을 조회하고 브리핑합니다.
+SCHEDULE_PROMPT = """당신은 임원 일정 담당입니다. 임원의 일정을 조회·브리핑하고, 기존 일정의 시간 변경·취소·불참과 승인 처리를 합니다.
 
 규칙
 - 일정 내용과 권한은 도구 결과만 믿고 직접 만들지 않습니다.
@@ -231,12 +231,22 @@ SCHEDULE_PROMPT = """당신은 임원 일정 담당입니다. 임원의 일정�
 - 브리핑은 시간 순서로 "HH:MM~HH:MM 제목"을 전합니다.
 - status가 "바쁨"인 항목과 denied 결과의 busy 항목은 "HH:MM~HH:MM 바쁨"처럼 시간과 '바쁨'만 쓰고, 내용은 짐작하지 않습니다.
 - 특정 시각의 일정을 물으면 tool_get_event_at을 씁니다.
-- 도구 결과에 denied, not_found, no_event가 있으면 reason을 그대로 전합니다.
+- 시간 변경·취소·불참은 먼저 tool_list_events로 그날 일정을 조회해 event_id를 찾아 씁니다. event_id를 지어내지 않습니다.
+- 시간 변경에서 끝 시각을 말하지 않으면 new_end를 넘기지 않습니다. 길이는 도구가 원래대로 둡니다.
+- 승인·거절은 tool_list_pending_approvals로 approval_id를 찾은 뒤 tool_decide_approval을 부릅니다.
+- 요청이 분명하면 되묻지 않고 바로 처리합니다. 같은 이름의 일정이 여러 개일 때만 묻습니다.
+- 결과가 applied=false이고 pending_approval_for가 있으면 "승인 대기"라고 하고 reason을 그대로 전합니다.
+- 시간 변경 결과에는 새 시작~끝 시각(HH:MM~HH:MM)을, 불참 요청 결과에는 '불참'이라는 말을 씁니다.
+- 도구 결과에 denied, not_found, no_event, conflict가 있으면 reason을 그대로 전합니다.
 - 한국어로 짧게 답합니다.
 """
 
-# 일정 Agent에 여는 도구. 변경·승인(3-3), 프로필·검색(3-4)은 그 작업에서 추가합니다.
-SCHEDULE_TOOL_NAMES = ("tool_list_events", "tool_get_event_at")
+# 일정 Agent에 여는 도구. 프로필·검색(3-4)은 그 작업에서 추가합니다.
+SCHEDULE_TOOL_NAMES = (
+    "tool_list_events", "tool_get_event_at",
+    "tool_update_event", "tool_cancel_event", "tool_mark_absent",
+    "tool_list_pending_approvals", "tool_decide_approval",
+)
 
 
 def build_schedule_agent(ctx: Ctx, llm=None, checkpointer=None):
@@ -277,6 +287,7 @@ SUPERVISOR_PROMPT = """당신은 임원 일정 관리 Agent의 Supervisor입니�
 - 하위 Agent는 사용자의 원래 요청을 그대로 받으므로 도구에 인자를 넘기지 않습니다.
 - 새 회의·미팅을 잡거나, 후보 시간·빈 시간을 찾거나, 후보를 골라 등록하는 요청은 coordination_agent입니다(예: "미팅 잡아줘", "30분 미팅 후보 찾아줘").
 - 이미 있는 일정을 보거나 브리핑·정리하는 요청, 특정 시각에 무슨 일정이 있는지 묻는 요청은 schedule_agent입니다(예: "내일 일정 브리핑해줘").
+- 이미 있는 일정의 시간 변경·취소·불참, 승인 대기 목록·승인·거절도 schedule_agent입니다(예: "협력사 미팅 11시로 옮겨줘", "전략 리뷰는 불참으로 해줘", "참석 요청 승인해줘").
 - 앞 대화를 이어 가는 짧은 요청(예: "2번으로 해줘")은 직전에 맡았던 하위 Agent에게 보냅니다.
 - 맞는 하위 Agent가 없으면 도구를 부르지 않고, 아직 지원하지 않는 요청이라고 한국어로 한 줄 답합니다.
 """
@@ -289,7 +300,8 @@ SUB_AGENTS = {
     ),
     "schedule_agent": (
         "일정", build_schedule_agent,
-        "일정 담당. 임원의 기존 일정을 조회·브리핑하고, 특정 시각에 무슨 일정이 있는지 확인합니다.",
+        "일정 담당. 임원의 기존 일정 조회·브리핑, 특정 시각 일정 확인, 기존 일정의 시간 변경·취소·불참, "
+        "승인 대기 목록 조회와 승인·거절을 합니다.",
     ),
 }
 

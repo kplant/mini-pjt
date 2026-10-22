@@ -67,6 +67,9 @@ r = T.register_event(keep("sec-kim"), "임원 회의", c2["start"], c2["end"], [
 check("m-07", r.get("registered_for") == ["exec-kang"] and r.get("pending_approval_for") == ["exec-yoon"], text(r))
 r = T.update_event(ctx("exec-kang"), "ev-04", "2026-10-28T11:00", "2026-10-28T12:00")
 check("m-08", r.get("applied") and r["pending_approval_for"] == [], text(r))
+r = T.update_event(ctx("exec-kang"), "ev-04", "2026-10-28T11:00")
+check("m-08 끝 시각 생략 시 길이 유지", r.get("end") == "2026-10-28T12:00"
+      and q("SELECT end FROM events WHERE id = 'ev-04'") == "2026-10-28T12:00", text(r))
 r = T.cancel_event(ctx("sec-jung"), "ev-04")
 check("m-09", r.get("pending_approval_for") == ["exec-kang"] and not r["applied"], text(r))
 r = T.mark_absent(ctx("sec-kim"), "ev-07")
