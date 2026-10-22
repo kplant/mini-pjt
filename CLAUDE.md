@@ -51,6 +51,7 @@ evaluation/        test_queries.csv 와 평가 리포트
 - 요청하지 않은 파일이 필요하면 경로와 목적을 먼저 묻는다(임시 폴더에 몰래 만들지 않는다).
 - 테스트 보고: 실행한 명령, 출력 원문, 읽는 법, PowerShell 재현 명령을 함께 보여 준다.
 - 답변은 한국어로 한다. 명령·출력 원문은 그대로 둔다.
+- 질문은 가능하면 grill-with-docs 방식(`mattpocock-skills:grilling` + `mattpocock-skills:domain-modeling` 스킬)으로 하고, 정해진 용어·결정은 CONTEXT.md와 docs/adr/에 남긴다. 단순한 선택지 확인은 선택지 질문으로 충분하다.
 
 ## 개발 환경
 - Windows. Python은 `.venv/Scripts/python.exe`(3.14)를 쓴다.
