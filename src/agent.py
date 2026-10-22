@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1, Haiku 1순위), 일정 Agent 조회·브리핑(TASKS 3-2), 변경·승인(TASKS 3-3), 프로필·소개 자료 검색(TASKS 3-4)이 있습니다. 관리 Agent는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1), 일정 Agent 조회·브리핑(TASKS 3-2), 변경·승인(TASKS 3-3), 프로필·소개 자료 검색(TASKS 3-4), 관리 Agent(TASKS 3-5)가 있습니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -39,9 +39,6 @@ MODEL_IDS = (
     "us.amazon.nova-lite-v1:0",
 )
 
-# Supervisor는 고르기만 하므로 빠른 모델을 먼저 씁니다. .env의 SUPERVISOR_MODEL_ID로 바꿀 수 있습니다.
-SUPERVISOR_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-
 
 def model_ids() -> list[str]:
     """사용할 모델 후보 목록을 순서대로 돌려줍니다.
@@ -57,10 +54,13 @@ def model_ids() -> list[str]:
 
 
 def supervisor_model_ids() -> list[str]:
-    """Supervisor의 모델 후보 목록입니다. Haiku를 맨 앞에 두고, 나머지는 model_ids() 순서를 따릅니다."""
+    """Supervisor의 모델 후보 목록입니다. 기본은 하위 Agent와 같은 model_ids()입니다.
+
+    .env의 SUPERVISOR_MODEL_ID가 있으면 그 모델을 맨 앞에 둡니다(예: 라우팅만 빠른 모델로 시험할 때).
+    """
     rest = model_ids()  # .env를 먼저 읽습니다
-    first = os.getenv("SUPERVISOR_MODEL_ID", "").strip() or SUPERVISOR_MODEL_ID
-    return [first] + [m for m in rest if m != first]
+    first = os.getenv("SUPERVISOR_MODEL_ID", "").strip()
+    return [first] + [m for m in rest if m != first] if first else rest
 
 
 @lru_cache(maxsize=None)
@@ -275,6 +275,26 @@ def build_schedule_agent(ctx: Ctx, llm=None, checkpointer=None):
     return _build_sub_agent(ctx, SCHEDULE_PROMPT, tools, llm, checkpointer)
 
 
+# ---------------------------------------------------------------------------
+# 관리 Agent (TASKS 3-5)
+# ---------------------------------------------------------------------------
+
+ADMIN_PROMPT = """당신은 담당 관계 관리 담당입니다. 비서가 어느 임원을 담당하는지 조회하고 바꿉니다.
+
+규칙
+- 담당 관계 조회는 tool_list_assignments, 변경은 tool_set_assignment를 씁니다.
+- 도구에 사람을 넘길 때는 성명 전체(예: 정하은 비서, 한도윤 상무)를 씁니다.
+- 요청이 분명하면 되묻지 않고 바로 처리합니다.
+- 도구 결과에 denied, not_found, error가 있으면 지어내지 않고 reason을 그대로 전합니다.
+- 한국어로 짧게 답합니다.
+"""
+
+
+def build_admin_agent(ctx: Ctx, llm=None, checkpointer=None):
+    """관리 Agent를 만듭니다(담당 관계 조회·변경, 관리자 전용 도구)."""
+    return _build_sub_agent(ctx, ADMIN_PROMPT, build_tools(ctx)["관리"], llm, checkpointer)
+
+
 def answered_model(messages: list) -> str | None:
     """이번 턴에서 마지막으로 답한 모델 ID를 돌려줍니다. 대체가 일어나면 바뀐 모델이 나옵니다."""
     for m in reversed(messages):
@@ -310,7 +330,9 @@ SUPERVISOR_PROMPT = """당신은 임원 일정 관리 Agent의 Supervisor입니�
 - 이미 있는 일정의 시간 변경·취소·불참, 승인 대기 목록·승인·거절도 schedule_agent입니다(예: "협력사 미팅 11시로 옮겨줘", "전략 리뷰는 불참으로 해줘", "참석 요청 승인해줘").
 - 사람(임원·직원·외부 인물)이나 회사에 관한 질문은 모두 schedule_agent입니다. 프로필·연락처 조회, 외부 인물 프로필 등록, 경력·회사 소개·연구 분야·최근 소식이 여기에 듭니다(예: "박정우 대표 연락처 알려줘", "프로필 등록해줘", "ABC사 박정우 대표는 어떤 분이야?", "고은비 교수 연구 분야가 뭐야?", "회사 최근 소식 알려줘").
 - 앞 대화를 이어 가는 짧은 요청(예: "2번으로 해줘")은 직전에 맡았던 하위 Agent에게 보냅니다.
-- 일정·회의·사람·회사와 전혀 관계없는 요청일 때만 도구를 부르지 않고, 지원하지 않는 요청이라고 한국어로 한 줄 답합니다.
+- 비서의 담당 임원(담당 관계) 조회·변경은 admin_agent입니다(예: "정하은 비서를 한도윤 상무 담당으로 바꿔줘").
+- 일정·사람에 관한 요청은 요청자가 관리자여도 schedule_agent에 보냅니다. 권한은 하위 Agent의 도구가 판단합니다.
+- 일정·회의·사람·회사·담당 관계와 전혀 관계없는 요청일 때만 도구를 부르지 않고, 지원하지 않는 요청이라고 한국어로 한 줄 답합니다.
 """
 
 # 도구 이름(Bedrock은 영문만 허용) → (route 이름, Agent를 만드는 함수, 도구 설명)
@@ -323,6 +345,10 @@ SUB_AGENTS = {
         "일정", build_schedule_agent,
         "일정 담당. 임원의 기존 일정 조회·브리핑, 특정 시각 일정 확인, 기존 일정의 시간 변경·취소·불참, "
         "승인 대기 목록 조회와 승인·거절, 사람의 프로필·연락처 조회, 외부 인물 등록, 외부 인물·회사 소개 자료 검색을 합니다.",
+    ),
+    "admin_agent": (
+        "관리", build_admin_agent,
+        "담당 관계 담당. 비서와 담당 임원 목록을 조회하고, 비서의 담당 임원을 바꿉니다.",
     ),
 }
 

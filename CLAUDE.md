@@ -30,7 +30,7 @@ evaluation/        test_queries.csv 와 평가 리포트
 
 - 무엇을 만드는지는 SERVICE.md가 기준이다. 애매하면 추측하지 말고 물어본다.
 
-- 스택: Python, LangGraph, Bedrock (기본 us.anthropic.claude-sonnet-4-5-20250929-v1:0) -> 후보 10개와 순서는 src/agent.py의 MODEL_IDS에 두고, .env의 BEDROCK_MODEL_IDS로 덮어쓸 수 있다. 실패하면 다음 후보로 넘어가 중단 없이 쓴다. Supervisor만 Haiku(`SUPERVISOR_MODEL_ID`, .env로 덮어쓰기)를 1순위로 쓴다.
+- 스택: Python, LangGraph, Bedrock (기본 us.anthropic.claude-sonnet-4-5-20250929-v1:0) -> 후보 10개와 순서는 src/agent.py의 MODEL_IDS에 두고, .env의 BEDROCK_MODEL_IDS로 덮어쓸 수 있다. 실패하면 다음 후보로 넘어가 중단 없이 쓴다. Supervisor도 같은 후보 순서를 쓰며, .env의 SUPERVISOR_MODEL_ID로 Supervisor의 1순위만 바꿀 수 있다.
 
 - 괜찮은 레퍼런스 코드를 깃허브에서 찾아서 레퍼런스로 삼거나 (있을 경우) 현재 ref 폴더 내 코드를 참조한다. 절대 사용자의 허락없이 신규 프레임워크 또는 라이브러리를 들이지 않는다.
 
