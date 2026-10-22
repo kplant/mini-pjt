@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1)가 있습니다. 일정·관리 Agent는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1, Haiku 1순위), 일정 Agent 조회·브리핑(TASKS 3-2)이 있습니다. 일정 변경·프로필과 관리 Agent는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -39,6 +39,9 @@ MODEL_IDS = (
     "us.amazon.nova-lite-v1:0",
 )
 
+# Supervisor는 고르기만 하므로 빠른 모델을 먼저 씁니다. .env의 SUPERVISOR_MODEL_ID로 바꿀 수 있습니다.
+SUPERVISOR_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
 
 def model_ids() -> list[str]:
     """사용할 모델 후보 목록을 순서대로 돌려줍니다.
@@ -51,6 +54,13 @@ def model_ids() -> list[str]:
     raw = os.getenv("BEDROCK_MODEL_IDS", "")
     ids = [m.strip() for m in raw.split(",") if m.strip()]
     return ids or list(MODEL_IDS)
+
+
+def supervisor_model_ids() -> list[str]:
+    """Supervisor의 모델 후보 목록입니다. Haiku를 맨 앞에 두고, 나머지는 model_ids() 순서를 따릅니다."""
+    rest = model_ids()  # .env를 먼저 읽습니다
+    first = os.getenv("SUPERVISOR_MODEL_ID", "").strip() or SUPERVISOR_MODEL_ID
+    return [first] + [m for m in rest if m != first]
 
 
 @lru_cache(maxsize=None)
@@ -112,6 +122,7 @@ COORDINATION_PROMPT = """당신은 임원 일정 조율 담당입니다. 참석�
 - 도구 결과에 denied, no_answer, conflict가 있으면 reason을 그대로 전하고, notice가 있으면 함께 안내합니다.
 - 일정 등록은 사용자가 후보를 고른 뒤에만 합니다.
 - 사용자가 번호로 후보를 고르면 직전 tool_find_candidates 결과에서 그 번호의 start·end와 참석자로 tool_register_event를 호출합니다.
+- 등록할 때 제목을 되묻지 않습니다. 요청에 제목이 없으면 "회의"로 등록합니다.
 - 한국어로 짧게 답합니다.
 """
 
@@ -121,14 +132,18 @@ def date_hints(base: date) -> str:
     def d(x: date) -> str:
         return f"{x.isoformat()}({WEEKDAYS[x.weekday()]})"
 
+    def week(start: date) -> str:
+        return ", ".join(f"{WEEKDAYS[i]} {(start + timedelta(days=i)).isoformat()}" for i in range(5))
+
     monday = base - timedelta(days=base.weekday())
     next_monday = monday + timedelta(days=7)
     return (
         "날짜 안내\n"
         f"- 기준일(오늘): {d(base)}\n"
         f"- 내일: {d(base + timedelta(days=1))}\n"
-        f"- 이번 주: {d(monday)} ~ {d(monday + timedelta(days=4))}\n"
-        f"- 다음 주: {d(next_monday)} ~ {d(next_monday + timedelta(days=4))}\n"
+        f"- 이번 주: {d(monday)} ~ {d(monday + timedelta(days=4))} ({week(monday)})\n"
+        f"- 다음 주: {d(next_monday)} ~ {d(next_monday + timedelta(days=4))} ({week(next_monday)})\n"
+        "- 요일만 말하면(예: 목요일) 이번 주의 그 요일입니다.\n"
     )
 
 
@@ -164,36 +179,70 @@ def _checkpointer():
     return _CHECKPOINTER
 
 
-def _model_setup(llm=None) -> tuple[Any, list]:
+def _model_setup(llm=None, ids: list[str] | None = None) -> tuple[Any, list]:
     """Agent에 넣을 모델과 미들웨어를 정합니다.
 
-    llm을 주입하지 않으면 첫 후보 모델로 시작하고, 실패하면 ModelFallbackMiddleware가 다음 후보로 넘어갑니다.
+    llm을 주입하지 않으면 후보 목록(기본 model_ids())의 첫 모델로 시작하고,
+    실패하면 ModelFallbackMiddleware가 다음 후보로 넘어갑니다.
     """
     from langchain.agents.middleware import ModelFallbackMiddleware
 
     if llm is not None:
         return llm, []
-    ids = model_ids()
+    ids = ids or model_ids()
     middleware = [ModelFallbackMiddleware(*[make_model(i) for i in ids[1:]])] if len(ids) > 1 else []
     return make_model(ids[0]), middleware
 
 
-def build_coordination_agent(ctx: Ctx, llm=None, checkpointer=None):
-    """조율 Agent를 만듭니다. 도구는 ctx의 요청자로 고정되어 권한을 직접 검사합니다.
+def _build_sub_agent(ctx: Ctx, prompt: str, tools: list, llm=None, checkpointer=None):
+    """하위 Agent 하나를 만듭니다. 프롬프트 뒤에 날짜 안내와 요청자 정보를 붙입니다.
 
+    도구는 ctx의 요청자로 고정되어 권한을 직접 검사합니다.
     checkpointer가 있으면 thread_id별로 대화를 이어 갑니다. 시스템 프롬프트는 대화 상태에 저장되지 않아 매 턴 새로 만듭니다.
     """
     from langchain.agents import create_agent
 
-    prompt = COORDINATION_PROMPT + "\n" + date_hints(ctx.base_date) + "\n" + requester_desc(ctx)
-    llm, middleware = _model_setup(llm)
+    model, middleware = _model_setup(llm)
     return create_agent(
-        model=llm,
-        tools=build_tools(ctx)["조율"],
-        system_prompt=prompt,
+        model=model,
+        tools=tools,
+        system_prompt=prompt + "\n" + date_hints(ctx.base_date) + "\n" + requester_desc(ctx),
         checkpointer=checkpointer,
         middleware=middleware,
     )
+
+
+def build_coordination_agent(ctx: Ctx, llm=None, checkpointer=None):
+    """조율 Agent를 만듭니다(후보 시간, 바쁨 조회, 일정 등록)."""
+    return _build_sub_agent(ctx, COORDINATION_PROMPT, build_tools(ctx)["조율"], llm, checkpointer)
+
+
+# ---------------------------------------------------------------------------
+# 일정 Agent (TASKS 3-2~)
+# ---------------------------------------------------------------------------
+
+SCHEDULE_PROMPT = """당신은 임원 일정 담당입니다. 임원의 일정을 조회하고 브리핑합니다.
+
+규칙
+- 일정 내용과 권한은 도구 결과만 믿고 직접 만들지 않습니다.
+- 도구에 사람을 넘길 때는 성명 전체(예: 강민준 부사장)를 씁니다.
+- 날짜는 아래 '날짜 안내'의 값을 YYYY-MM-DD 그대로 도구에 넘깁니다. 직접 계산하지 않습니다.
+- "내 일정"은 요청자가 임원이면 본인, 비서면 담당 임원의 일정입니다.
+- 브리핑은 시간 순서로 "HH:MM~HH:MM 제목"을 전합니다.
+- status가 "바쁨"인 항목과 denied 결과의 busy 항목은 "HH:MM~HH:MM 바쁨"처럼 시간과 '바쁨'만 쓰고, 내용은 짐작하지 않습니다.
+- 특정 시각의 일정을 물으면 tool_get_event_at을 씁니다.
+- 도구 결과에 denied, not_found, no_event가 있으면 reason을 그대로 전합니다.
+- 한국어로 짧게 답합니다.
+"""
+
+# 일정 Agent에 여는 도구. 변경·승인(3-3), 프로필·검색(3-4)은 그 작업에서 추가합니다.
+SCHEDULE_TOOL_NAMES = ("tool_list_events", "tool_get_event_at")
+
+
+def build_schedule_agent(ctx: Ctx, llm=None, checkpointer=None):
+    """일정 Agent를 만듭니다(조회·브리핑·특정 시각 조회)."""
+    tools = [t for t in build_tools(ctx)["일정"] if t.name in SCHEDULE_TOOL_NAMES]
+    return _build_sub_agent(ctx, SCHEDULE_PROMPT, tools, llm, checkpointer)
 
 
 def answered_model(messages: list) -> str | None:
@@ -226,6 +275,8 @@ SUPERVISOR_PROMPT = """당신은 임원 일정 관리 Agent의 Supervisor입니�
 규칙
 - 요청을 직접 처리하거나 답을 지어내지 않습니다. 하위 Agent 도구를 하나만 부릅니다.
 - 하위 Agent는 사용자의 원래 요청을 그대로 받으므로 도구에 인자를 넘기지 않습니다.
+- 새 회의·미팅을 잡거나, 후보 시간·빈 시간을 찾거나, 후보를 골라 등록하는 요청은 coordination_agent입니다(예: "미팅 잡아줘", "30분 미팅 후보 찾아줘").
+- 이미 있는 일정을 보거나 브리핑·정리하는 요청, 특정 시각에 무슨 일정이 있는지 묻는 요청은 schedule_agent입니다(예: "내일 일정 브리핑해줘").
 - 앞 대화를 이어 가는 짧은 요청(예: "2번으로 해줘")은 직전에 맡았던 하위 Agent에게 보냅니다.
 - 맞는 하위 Agent가 없으면 도구를 부르지 않고, 아직 지원하지 않는 요청이라고 한국어로 한 줄 답합니다.
 """
@@ -234,7 +285,11 @@ SUPERVISOR_PROMPT = """당신은 임원 일정 관리 Agent의 Supervisor입니�
 SUB_AGENTS = {
     "coordination_agent": (
         "조율", build_coordination_agent,
-        "회의 조율 담당. 참석자 모두가 비어 있는 후보 시간을 찾고, 사용자가 후보를 고르면 일정을 등록합니다.",
+        "회의 조율 담당. 새 회의를 잡을 때 참석자 모두가 비어 있는 후보 시간을 찾고, 사용자가 후보를 고르면 일정을 등록합니다.",
+    ),
+    "schedule_agent": (
+        "일정", build_schedule_agent,
+        "일정 담당. 임원의 기존 일정을 조회·브리핑하고, 특정 시각에 무슨 일정이 있는지 확인합니다.",
     ),
 }
 
@@ -258,7 +313,7 @@ def build_supervisor(ctx: Ctx, question: str, sink: list, llm=None, checkpointer
 
         return StructuredTool.from_function(run, name=tool_name, description=description, return_direct=True)
 
-    model, middleware = _model_setup(llm)
+    model, middleware = _model_setup(llm, supervisor_model_ids())
     return create_agent(
         model=model,
         tools=[sub_agent_tool(name, *spec) for name, spec in SUB_AGENTS.items()],

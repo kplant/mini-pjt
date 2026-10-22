@@ -52,8 +52,8 @@
 ## 3. Supervisor와 하위 Agent
 - [x] 3-1 Supervisor(`create_agent`) 아래에 조율 Agent를 도구로 연결하고 route 기록
   - 확인: m-04를 Supervisor로 보내도 같은 답이 나오고 decision 단계의 `route="조율"`
-- [ ] 3-2 일정 Agent: 조회·브리핑·특정 시각 조회
-  - 확인: m-01, m-02, m-03의 must_include / must_not_include 통과
+- [x] 3-2 일정 Agent: 조회·브리핑·특정 시각 조회 + Supervisor는 Haiku 1순위
+  - 확인: m-01, m-02, m-03의 must_include / must_not_include 통과, m-04 응답 10초 이내, m-04~m-07·m-21 route 유지
 - [ ] 3-3 일정 Agent: 변경·취소·불참·승인 처리
   - 확인: m-08~m-12 실행 후 DB 상태가 `expect`와 일치
 - [ ] 3-4 일정 Agent: 프로필 조회·외부 인물 등록·소개 자료 검색(`contexts` 채움, 검색 trace 단계 이름은 스펙 예시대로 `retrieve`)
