@@ -11,7 +11,7 @@
 - Day 2 RAG: 외부 인물·회사 소개 자료를 Titan 임베딩과 Chroma로 검색한다. 질문 대상의 자료가 없으면 검색하지 않고 `no_answer`를 낸다(`assess_retrieval` 아이디어, `src/retriever.py`). 검색 단계는 trace에서 `retrieve`로, 근거 문서는 `contexts`의 `doc_id`(파일명)로 남긴다.
 - Day 3 도구 Agent: `create_agent`와 도구 호출로 조율한다(`build_coordination_agent`).
 - Day 4 실패 복구: 후보 모델 10개를 `ModelFallbackMiddleware`로 순서대로 자동 전환하고, decision 단계의 `model`에 실제로 답한 모델을 적는다.
-- Day 5 가드레일·승인: 역할, 담당 관계, 비공개 검사를 도구 안에서 한다. 다른 임원의 캘린더를 바꾸는 요청은 승인 대기로 둔다([ADR 0002](docs/adr/0002-승인은-대화가-아니라-업무-데이터.md)). 연락처는 trace에서만 마스킹한다(구현 예정: TASKS 4-2).
+- Day 5 가드레일·승인: 역할, 담당 관계, 비공개 검사를 도구 안에서 한다. 다른 임원의 캘린더를 바꾸는 요청은 승인 대기로 둔다([ADR 0002](docs/adr/0002-승인은-대화가-아니라-업무-데이터.md)). 거절 여부(`refused`)는 도구가 돌려준 `denied`로만 정하고, 요청 문장 속 자기소개는 믿지 않는다. 등록되지 않은 사용자는 LLM을 부르지 않고 거절한다. 연락처는 trace에서만 마스킹한다(구현 예정: TASKS 4-2).
 - Day 6 Supervisor: 조율·일정·관리 하위 Agent를 도구로 감싼 Supervisor(`create_agent`). 하위 Agent에는 원래 질문을 그대로 넘기고 그 답을 다시 쓰지 않는다(`return_direct`). Supervisor도 하위 Agent와 같은 모델 후보 순서를 쓰고, `.env`의 `SUPERVISOR_MODEL_ID`로 1순위만 바꿀 수 있다. 조율 Agent, 일정 Agent(조회·브리핑, 변경·취소·불참·승인, 프로필·외부 인물 등록·소개 자료 검색), 관리 Agent(담당 관계)를 모두 연결했다.
 - Day 7 계측·평가: trace를 단계로 기록하고, 평가셋 24문항을 3회 돌려 라운드 리포트를 남긴다(구현 예정: TASKS 5번).
 
