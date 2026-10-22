@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1, Haiku 1순위), 일정 Agent 조회·브리핑(TASKS 3-2)과 변경·승인(TASKS 3-3)이 있습니다. 프로필·검색과 관리 Agent는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1, Haiku 1순위), 일정 Agent 조회·브리핑(TASKS 3-2), 변경·승인(TASKS 3-3), 프로필·소개 자료 검색(TASKS 3-4)이 있습니다. 관리 Agent는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -237,21 +237,41 @@ SCHEDULE_PROMPT = """당신은 임원 일정 담당입니다. 임원의 일정�
 - 요청이 분명하면 되묻지 않고 바로 처리합니다. 같은 이름의 일정이 여러 개일 때만 묻습니다.
 - 결과가 applied=false이고 pending_approval_for가 있으면 "승인 대기"라고 하고 reason을 그대로 전합니다.
 - 시간 변경 결과에는 새 시작~끝 시각(HH:MM~HH:MM)을, 불참 요청 결과에는 '불참'이라는 말을 씁니다.
-- 도구 결과에 denied, not_found, no_event, conflict가 있으면 reason을 그대로 전합니다.
+- 연락처·직책·소속을 물으면 tool_get_profile을 씁니다.
+- "어떤 분이야", 경력, 회사 소개, 연구 분야, 최근 소식을 물으면 tool_search_intro를 씁니다. subject는 성명 전체나 회사명입니다. 답은 검색 결과 내용만으로 씁니다.
+- 외부 인물 등록은 요청에 나온 성명·직책·소속·전화·이메일을 그대로 tool_register_external_profile에 넘깁니다.
+- 도구 결과에 denied, not_found, no_answer, no_event, conflict가 있으면 지어내지 않고 reason을 그대로 전합니다.
 - 한국어로 짧게 답합니다.
 """
 
-# 일정 Agent에 여는 도구. 프로필·검색(3-4)은 그 작업에서 추가합니다.
+# 일정 Agent에 여는 tools.py 도구. 소개 자료 검색(tool_search_intro)은 retriever.py에서 따로 붙입니다.
 SCHEDULE_TOOL_NAMES = (
     "tool_list_events", "tool_get_event_at",
     "tool_update_event", "tool_cancel_event", "tool_mark_absent",
     "tool_list_pending_approvals", "tool_decide_approval",
+    "tool_get_profile", "tool_register_external_profile",
 )
+
+SEARCH_TOOL = "tool_search_intro"
+_INTRO_STORE = None
+
+
+def _intro_store():
+    """소개 자료 Chroma 저장소를 처음 쓸 때 한 번 열어 재사용합니다."""
+    global _INTRO_STORE
+    if _INTRO_STORE is None:
+        from src.retriever import build_vectorstore
+
+        _INTRO_STORE = build_vectorstore()
+    return _INTRO_STORE
 
 
 def build_schedule_agent(ctx: Ctx, llm=None, checkpointer=None):
-    """일정 Agent를 만듭니다(조회·브리핑·특정 시각 조회)."""
+    """일정 Agent를 만듭니다(조회·브리핑, 변경·승인, 프로필·외부 인물 등록, 소개 자료 검색)."""
+    from src.retriever import build_search_tool
+
     tools = [t for t in build_tools(ctx)["일정"] if t.name in SCHEDULE_TOOL_NAMES]
+    tools.append(build_search_tool(_intro_store()))
     return _build_sub_agent(ctx, SCHEDULE_PROMPT, tools, llm, checkpointer)
 
 
@@ -288,8 +308,9 @@ SUPERVISOR_PROMPT = """당신은 임원 일정 관리 Agent의 Supervisor입니�
 - 새 회의·미팅을 잡거나, 후보 시간·빈 시간을 찾거나, 후보를 골라 등록하는 요청은 coordination_agent입니다(예: "미팅 잡아줘", "30분 미팅 후보 찾아줘").
 - 이미 있는 일정을 보거나 브리핑·정리하는 요청, 특정 시각에 무슨 일정이 있는지 묻는 요청은 schedule_agent입니다(예: "내일 일정 브리핑해줘").
 - 이미 있는 일정의 시간 변경·취소·불참, 승인 대기 목록·승인·거절도 schedule_agent입니다(예: "협력사 미팅 11시로 옮겨줘", "전략 리뷰는 불참으로 해줘", "참석 요청 승인해줘").
+- 사람(임원·직원·외부 인물)이나 회사에 관한 질문은 모두 schedule_agent입니다. 프로필·연락처 조회, 외부 인물 프로필 등록, 경력·회사 소개·연구 분야·최근 소식이 여기에 듭니다(예: "박정우 대표 연락처 알려줘", "프로필 등록해줘", "ABC사 박정우 대표는 어떤 분이야?", "고은비 교수 연구 분야가 뭐야?", "회사 최근 소식 알려줘").
 - 앞 대화를 이어 가는 짧은 요청(예: "2번으로 해줘")은 직전에 맡았던 하위 Agent에게 보냅니다.
-- 맞는 하위 Agent가 없으면 도구를 부르지 않고, 아직 지원하지 않는 요청이라고 한국어로 한 줄 답합니다.
+- 일정·회의·사람·회사와 전혀 관계없는 요청일 때만 도구를 부르지 않고, 지원하지 않는 요청이라고 한국어로 한 줄 답합니다.
 """
 
 # 도구 이름(Bedrock은 영문만 허용) → (route 이름, Agent를 만드는 함수, 도구 설명)
@@ -301,7 +322,7 @@ SUB_AGENTS = {
     "schedule_agent": (
         "일정", build_schedule_agent,
         "일정 담당. 임원의 기존 일정 조회·브리핑, 특정 시각 일정 확인, 기존 일정의 시간 변경·취소·불참, "
-        "승인 대기 목록 조회와 승인·거절을 합니다.",
+        "승인 대기 목록 조회와 승인·거절, 사람의 프로필·연락처 조회, 외부 인물 등록, 외부 인물·회사 소개 자료 검색을 합니다.",
     ),
 }
 
@@ -402,9 +423,15 @@ def _step(step: str, input_: Any, output: Any) -> dict:
 
 
 def build_trace(question: str, calls: list[dict], verdict: dict) -> list[dict]:
-    """trace를 단계 목록으로 만듭니다: route → 도구 호출들 → decision(판정 값)."""
+    """trace를 단계 목록으로 만듭니다: route → 도구 호출들 → decision(판정 값).
+
+    소개 자료 검색 단계는 제출 스펙 예시대로 이름을 retrieve로 둡니다.
+    """
+    def name(c: dict) -> str:
+        return "retrieve" if c["tool"] == SEARCH_TOOL else f"{c['agent']}.{c['tool']}"
+
     steps = [_step("route", question, verdict["route"])]
-    steps += [_step(f"{c['agent']}.{c['tool']}", c["args"], c["result"]) for c in calls]
+    steps += [_step(name(c), c["args"], c["result"]) for c in calls]
     steps.append(_step("decision", "도구 결과로 판정", verdict))
     return steps
 
@@ -418,8 +445,17 @@ def decision(trace: list[dict]) -> dict:
 
 
 def build_contexts(calls: list[dict]) -> list[dict]:
-    """답변의 근거가 된 도구 결과를 [{doc_id, text}]로 담습니다."""
-    return [{"doc_id": c["tool"], "text": json.dumps(c["result"], ensure_ascii=False)} for c in calls]
+    """답변의 근거가 된 도구 결과를 [{doc_id, text}]로 담습니다.
+
+    소개 자료 검색 결과는 문서 조각마다 doc_id=파일명으로, 다른 도구 결과는 doc_id=도구 이름으로 넣습니다.
+    """
+    contexts = []
+    for c in calls:
+        if c["tool"] == SEARCH_TOOL:
+            contexts += [{"doc_id": r["source"], "text": r["content"]} for r in c["result"].get("results") or []]
+        else:
+            contexts.append({"doc_id": c["tool"], "text": json.dumps(c["result"], ensure_ascii=False)})
+    return contexts
 
 
 def _result(answer: str, contexts: list[dict], trace: list[dict]) -> dict:

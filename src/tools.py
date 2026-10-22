@@ -665,9 +665,15 @@ def get_profile(ctx: Ctx, name: str) -> dict:
 
 def register_external_profile(ctx: Ctx, name: str, title: str, org: str,
                               phone: str = "", email: str = "", memo: str = "") -> dict:
-    """외부 인물의 프로필을 등록합니다. 같은 성명·소속이 있으면 기존 프로필을 돌려줍니다."""
+    """외부 인물의 프로필을 등록합니다. 같은 성명·소속이 있으면 기존 프로필을 돌려줍니다.
+
+    name에 직책이 붙어 오면('임수빈 이사') 떼어 내고 이름만 저장합니다. 직책은 title에 둡니다.
+    """
     if ctx.requester.role not in ("임원", "비서"):
         return _denied("외부 인물은 임원과 비서만 등록할 수 있습니다.")
+    name = name.strip()
+    if title and name.endswith(" " + title):
+        name = name[: -len(title)].strip()
     conn = ctx.conn()
     try:
         row = conn.execute("SELECT * FROM people WHERE name = ? AND org = ?", (name, org)).fetchone()
@@ -801,7 +807,7 @@ def build_tools(ctx: Ctx) -> dict[str, list]:
     @tool
     def tool_register_external_profile(name: str, title: str, org: str,
                                        phone: str = "", email: str = "", memo: str = "") -> str:
-        """외부 인물의 프로필을 등록합니다. name은 성명 전체입니다."""
+        """외부 인물의 프로필을 등록합니다. name은 직책을 뺀 이름(예: '임수빈'), title은 직책(예: '이사')입니다."""
         return out(register_external_profile(ctx, name, title, org, phone, email, memo))
 
     @tool
