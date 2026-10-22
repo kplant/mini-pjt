@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3)가 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1), 모델 대체(TASKS 2-3), Supervisor(TASKS 3-1)가 있습니다. 일정·관리 Agent는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -164,22 +164,29 @@ def _checkpointer():
     return _CHECKPOINTER
 
 
+def _model_setup(llm=None) -> tuple[Any, list]:
+    """Agent에 넣을 모델과 미들웨어를 정합니다.
+
+    llm을 주입하지 않으면 첫 후보 모델로 시작하고, 실패하면 ModelFallbackMiddleware가 다음 후보로 넘어갑니다.
+    """
+    from langchain.agents.middleware import ModelFallbackMiddleware
+
+    if llm is not None:
+        return llm, []
+    ids = model_ids()
+    middleware = [ModelFallbackMiddleware(*[make_model(i) for i in ids[1:]])] if len(ids) > 1 else []
+    return make_model(ids[0]), middleware
+
+
 def build_coordination_agent(ctx: Ctx, llm=None, checkpointer=None):
     """조율 Agent를 만듭니다. 도구는 ctx의 요청자로 고정되어 권한을 직접 검사합니다.
 
     checkpointer가 있으면 thread_id별로 대화를 이어 갑니다. 시스템 프롬프트는 대화 상태에 저장되지 않아 매 턴 새로 만듭니다.
-    llm을 주입하지 않으면 첫 후보 모델로 시작하고, 실패하면 ModelFallbackMiddleware가 다음 후보로 넘어갑니다.
     """
     from langchain.agents import create_agent
-    from langchain.agents.middleware import ModelFallbackMiddleware
 
     prompt = COORDINATION_PROMPT + "\n" + date_hints(ctx.base_date) + "\n" + requester_desc(ctx)
-    middleware = []
-    if llm is None:
-        ids = model_ids()
-        llm = make_model(ids[0])
-        if len(ids) > 1:
-            middleware.append(ModelFallbackMiddleware(*[make_model(i) for i in ids[1:]]))
+    llm, middleware = _model_setup(llm)
     return create_agent(
         model=llm,
         tools=build_tools(ctx)["조율"],
@@ -206,6 +213,59 @@ def _invoke(agent, question: str, config: dict | None = None) -> list:
     messages = result["messages"]
     last_human = max((i for i, m in enumerate(messages) if getattr(m, "type", "") == "human"), default=0)
     return messages[last_human:]
+
+
+# ---------------------------------------------------------------------------
+# Supervisor (TASKS 3-1, ADR 0003)
+# 하위 Agent를 도구로 감싸 넘기고, 어느 도구를 불렀는지가 decision 단계의 route가 됩니다.
+# 하위 Agent는 사용자의 원래 질문을 그대로 받고, 그 답을 Supervisor가 다시 쓰지 않습니다(return_direct).
+# ---------------------------------------------------------------------------
+
+SUPERVISOR_PROMPT = """당신은 임원 일정 관리 Agent의 Supervisor입니다. 요청을 읽고 맡을 하위 Agent 도구 하나를 부릅니다.
+
+규칙
+- 요청을 직접 처리하거나 답을 지어내지 않습니다. 하위 Agent 도구를 하나만 부릅니다.
+- 하위 Agent는 사용자의 원래 요청을 그대로 받으므로 도구에 인자를 넘기지 않습니다.
+- 앞 대화를 이어 가는 짧은 요청(예: "2번으로 해줘")은 직전에 맡았던 하위 Agent에게 보냅니다.
+- 맞는 하위 Agent가 없으면 도구를 부르지 않고, 아직 지원하지 않는 요청이라고 한국어로 한 줄 답합니다.
+"""
+
+# 도구 이름(Bedrock은 영문만 허용) → (route 이름, Agent를 만드는 함수, 도구 설명)
+SUB_AGENTS = {
+    "coordination_agent": (
+        "조율", build_coordination_agent,
+        "회의 조율 담당. 참석자 모두가 비어 있는 후보 시간을 찾고, 사용자가 후보를 고르면 일정을 등록합니다.",
+    ),
+}
+
+
+def build_supervisor(ctx: Ctx, question: str, sink: list, llm=None, checkpointer=None,
+                     thread_key: str | None = None):
+    """Supervisor를 만듭니다. 하위 Agent 도구를 부르면 그 결과(route, 도구 호출, 답한 모델)를 sink에 모읍니다.
+
+    하위 Agent의 대화 기억은 thread_key 뒤에 route 이름을 붙인 키로 따로 둡니다.
+    """
+    from langchain.agents import create_agent
+    from langchain_core.tools import StructuredTool
+
+    def sub_agent_tool(tool_name: str, route: str, build, description: str):
+        def run() -> str:
+            config = {"configurable": {"thread_id": f"{thread_key}:{route}"}} if thread_key else None
+            messages = _invoke(build(ctx, llm, checkpointer), question, config)
+            calls = collect_tool_calls(messages, route)
+            sink.append({"route": route, "calls": calls, "model": answered_model(messages)})
+            return ensure_notices(get_text(messages[-1]), calls)
+
+        return StructuredTool.from_function(run, name=tool_name, description=description, return_direct=True)
+
+    model, middleware = _model_setup(llm)
+    return create_agent(
+        model=model,
+        tools=[sub_agent_tool(name, *spec) for name, spec in SUB_AGENTS.items()],
+        system_prompt=SUPERVISOR_PROMPT,
+        checkpointer=checkpointer,
+        middleware=middleware,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -309,7 +369,7 @@ def _to_date(value: date | str | None) -> date:
 
 def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | None = None,
               thread_id: str | None = None, llm=None, db_path: Path | str = DEFAULT_DB) -> dict:
-    """질문 하나를 처리해 제출 스펙의 응답을 돌려줍니다. 지금은 조율 Agent 하나만 씁니다.
+    """질문 하나를 처리해 제출 스펙의 응답을 돌려줍니다. Supervisor가 하위 Agent를 고르고, 그 이름이 route가 됩니다.
 
     thread_id가 있으면 같은 user_id·thread_id의 이전 대화를 이어 갑니다(db/checkpoints.sqlite).
     대화 키에 user_id를 붙여, 다른 사람이 같은 thread_id를 보내도 앞사람의 대화를 이어받지 못하게 합니다.
@@ -327,15 +387,19 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
         trace = [_step("auth", user_id, "등록되지 않은 사용자"), _step("decision", "요청자 확인", verdict)]
         return _result("등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다.", [], trace)
     ctx = Ctx(requester, _to_date(base_date), Path(db_path))
-    checkpointer, config = None, None
+    checkpointer, config, thread_key = None, None, None
     if thread_id:
         checkpointer = _checkpointer()
-        config = {"configurable": {"thread_id": f"{user_id}:{thread_id}"}}
-    messages = _invoke(build_coordination_agent(ctx, llm, checkpointer), question, config)
-    calls = collect_tool_calls(messages, "조율")
-    model_id = answered_model(messages) or ("injected" if llm is not None else model_ids()[0])
-    verdict = judge(calls, "조율", model_id, time.time() - start)
-    answer = ensure_notices(get_text(messages[-1]), calls)
+        thread_key = f"{user_id}:{thread_id}"
+        config = {"configurable": {"thread_id": thread_key}}
+    sink: list[dict] = []
+    messages = _invoke(build_supervisor(ctx, question, sink, llm, checkpointer, thread_key), question, config)
+    calls = [c for s in sink for c in s["calls"]]
+    route = sink[-1]["route"] if sink else None
+    model_id = (sink[-1]["model"] if sink else None) or answered_model(messages) \
+        or ("injected" if llm is not None else model_ids()[0])
+    verdict = judge(calls, route, model_id, time.time() - start)
+    answer = get_text(messages[-1])
     return _result(answer, build_contexts(calls), build_trace(question, calls, verdict))
 
 

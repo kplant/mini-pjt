@@ -12,7 +12,7 @@
 - Day 3 도구 Agent: `create_agent`와 도구 호출로 조율한다(`build_coordination_agent`).
 - Day 4 실패 복구: 후보 모델 10개를 `ModelFallbackMiddleware`로 순서대로 자동 전환하고, decision 단계의 `model`에 실제로 답한 모델을 적는다.
 - Day 5 가드레일·승인: 역할, 담당 관계, 비공개 검사를 도구 안에서 한다. 다른 임원의 캘린더를 바꾸는 요청은 승인 대기로 둔다([ADR 0002](docs/adr/0002-승인은-대화가-아니라-업무-데이터.md)). 연락처는 trace에서만 마스킹한다(구현 예정: TASKS 4-2).
-- Day 6 Supervisor: 조율·일정·관리 하위 Agent를 도구로 감싼 Supervisor(구현 예정: TASKS 3-1).
+- Day 6 Supervisor: 조율·일정·관리 하위 Agent를 도구로 감싼 Supervisor(`create_agent`). 하위 Agent에는 원래 질문을 그대로 넘기고 그 답을 다시 쓰지 않는다(`return_direct`). 지금은 조율 Agent만 연결했다(일정·관리는 TASKS 3-2~3-5).
 - Day 7 계측·평가: trace를 단계로 기록하고, 평가셋 24문항을 3회 돌려 라운드 리포트를 남긴다(구현 예정: TASKS 5번).
 
 ## 아키텍처
@@ -27,7 +27,7 @@ POST /query (src/app.py)
 ```
 - 권한은 프롬프트가 아니라 도구 코드가 SQLite에서 읽은 뒤 걸러서 넘긴다. 권한 밖의 데이터는 도구 밖으로 나가지 않는다([ADR 0003](docs/adr/0003-supervisor-구조-권한은-도구-계층.md)).
 - 평가 판정 값(route, refused, candidates, pending_approvals, model, latency_s)은 trace의 마지막 `decision` 단계에 담는다.
-- 현재 구현 범위: 서버와 조율 Agent 하나로 질문부터 응답까지(TASKS 1-5까지).
+- 현재 구현 범위: 서버 → Supervisor → 조율 Agent로 질문부터 응답까지(TASKS 3-1까지).
 
 ## 실행 방법
 ```bash

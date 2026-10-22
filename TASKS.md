@@ -50,7 +50,7 @@
   - 확인: `BEDROCK_MODEL_IDS`의 첫 값을 없는 ID로 바꾸면 decision 단계의 `model`이 다음 후보로 바뀜
 
 ## 3. Supervisor와 하위 Agent
-- [ ] 3-1 Supervisor(`create_agent`) 아래에 조율 Agent를 도구로 연결하고 route 기록
+- [x] 3-1 Supervisor(`create_agent`) 아래에 조율 Agent를 도구로 연결하고 route 기록
   - 확인: m-04를 Supervisor로 보내도 같은 답이 나오고 decision 단계의 `route="조율"`
 - [ ] 3-2 일정 Agent: 조회·브리핑·특정 시각 조회
   - 확인: m-01, m-02, m-03의 must_include / must_not_include 통과
