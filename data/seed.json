@@ -1,0 +1,46 @@
+{
+  "_note": "교육용 더미 데이터입니다. 실제 인물·조직과 무관합니다. evaluation/eval-fixtures.md 명세와 맞춰야 합니다.",
+  "base_date": "2026-10-26",
+  "people": [
+    {"id": "exec-kang", "name": "강민준", "title": "부사장", "role": "임원", "org": "OO사업부", "phone": "010-1000-0001", "email": "mj.kang@corp.example", "memo": ""},
+    {"id": "exec-yoon", "name": "윤서연", "title": "전무", "role": "임원", "org": "OO사업부", "phone": "010-1000-0002", "email": "sy.yoon@corp.example", "memo": ""},
+    {"id": "exec-han", "name": "한도윤", "title": "상무", "role": "임원", "org": "OO사업부", "phone": "010-1000-0003", "email": "dy.han@corp.example", "memo": ""},
+    {"id": "sec-kim", "name": "김지우", "title": "비서", "role": "비서", "org": "OO사업부", "phone": "010-2000-0001", "email": "jw.kim@corp.example", "memo": ""},
+    {"id": "sec-jung", "name": "정하은", "title": "비서", "role": "비서", "org": "OO사업부", "phone": "010-2000-0002", "email": "he.jung@corp.example", "memo": ""},
+    {"id": "sec-park", "name": "박민서", "title": "비서", "role": "비서", "org": "OO사업부", "phone": "010-2000-0003", "email": "ms.park@corp.example", "memo": ""},
+    {"id": "sec-choi", "name": "최유나", "title": "비서", "role": "비서", "org": "OO사업부", "phone": "010-2000-0004", "email": "yn.choi@corp.example", "memo": ""},
+    {"id": "admin-jo", "name": "조영훈", "title": "관리자", "role": "관리자", "org": "IT운영팀", "phone": "010-3000-0001", "email": "yh.jo@corp.example", "memo": ""},
+    {"id": "emp-oh", "name": "오지훈", "title": "과장", "role": "직원", "org": "OO사업부 영업팀", "phone": "010-4000-0001", "email": "jh.oh@corp.example", "memo": ""},
+    {"id": "emp-seo", "name": "서민재", "title": "차장", "role": "직원", "org": "OO사업부 기획팀", "phone": "010-4000-0002", "email": "mj.seo@corp.example", "memo": ""},
+    {"id": "emp-moon", "name": "문소희", "title": "대리", "role": "직원", "org": "OO사업부 기획팀", "phone": "010-4000-0003", "email": "sh.moon@corp.example", "memo": ""},
+    {"id": "emp-bae", "name": "배성민", "title": "팀장", "role": "직원", "org": "OO사업부 구매팀", "phone": "010-4000-0004", "email": "sm.bae@corp.example", "memo": ""},
+    {"id": "emp-nam", "name": "남기훈", "title": "부장", "role": "직원", "org": "OO사업부 재무팀", "phone": "010-4000-0005", "email": "kh.nam@corp.example", "memo": ""},
+    {"id": "ext-park", "name": "박정우", "title": "대표", "role": "외부 인물", "org": "ABC사", "phone": "010-1234-5678", "email": "park@abc.example", "memo": "커피보다 녹차를 선호"},
+    {"id": "ext-goh", "name": "고은비", "title": "교수", "role": "외부 인물", "org": "한국대학교", "phone": "010-3333-4444", "email": "goh@hankuk.example", "memo": "오전 미팅 선호"},
+    {"id": "ext-song", "name": "송재원", "title": "이사", "role": "외부 인물", "org": "GHI사", "phone": "010-5555-6666", "email": "song@ghi.example", "memo": ""}
+  ],
+  "assignments": [
+    {"secretary": "sec-kim", "executive": "exec-kang"},
+    {"secretary": "sec-jung", "executive": "exec-kang"},
+    {"secretary": "sec-park", "executive": "exec-yoon"},
+    {"secretary": "sec-choi", "executive": "exec-han"}
+  ],
+  "events": [
+    {"id": "ev-01", "title": "주간 경영회의", "start": "2026-10-27T09:00", "end": "2026-10-27T10:00", "host": "exec-kang", "attendees": ["exec-kang", "exec-yoon"], "private": false, "agenda": "주간 실적 점검"},
+    {"id": "ev-02", "title": "건강검진", "start": "2026-10-27T14:00", "end": "2026-10-27T15:00", "host": "exec-kang", "attendees": ["exec-kang"], "private": true, "agenda": ""},
+    {"id": "ev-03", "title": "ABC사 미팅", "start": "2026-10-27T16:00", "end": "2026-10-27T17:00", "host": "exec-kang", "attendees": ["exec-kang", "ext-park", "emp-oh"], "private": false, "agenda": "장비 공급 조건 협의"},
+    {"id": "ev-04", "title": "협력사 미팅", "start": "2026-10-28T10:00", "end": "2026-10-28T11:00", "host": "exec-kang", "attendees": ["exec-kang"], "private": false, "agenda": ""},
+    {"id": "ev-05", "title": "인사위원회", "start": "2026-10-29T10:00", "end": "2026-10-29T11:00", "host": "exec-yoon", "attendees": ["exec-yoon"], "private": false, "agenda": "승진 심사"},
+    {"id": "ev-06", "title": "가족 행사", "start": "2026-10-29T14:00", "end": "2026-10-29T15:00", "host": "exec-yoon", "attendees": ["exec-yoon"], "private": true, "agenda": ""},
+    {"id": "ev-07", "title": "전략 리뷰", "start": "2026-10-30T10:00", "end": "2026-10-30T11:00", "host": "exec-yoon", "attendees": ["exec-yoon", "exec-kang"], "private": false, "agenda": "하반기 전략 점검"},
+    {"id": "ev-08", "title": "해외 출장", "start": "2026-11-02T09:00", "end": "2026-11-06T18:00", "host": "exec-han", "attendees": ["exec-han"], "private": false, "agenda": ""},
+    {"id": "ev-09", "title": "예산 협의", "start": "2026-11-03T15:00", "end": "2026-11-03T16:00", "host": "exec-yoon", "attendees": ["exec-yoon", "exec-kang"], "private": false, "agenda": "내년 예산 초안 검토"}
+  ],
+  "approvals": [
+    {"id": "ap-01", "kind": "참석 요청", "event_id": "ev-09", "approver": "exec-kang", "requested_by": "sec-park", "change": {}}
+  ],
+  "employee_busy": [
+    {"person": "emp-seo", "start": "2026-11-02T09:00", "end": "2026-11-02T12:00"},
+    {"person": "emp-moon", "start": "2026-11-04T13:00", "end": "2026-11-04T18:00"}
+  ]
+}
