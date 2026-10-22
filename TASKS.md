@@ -31,7 +31,7 @@
   - 확인: 10개 모델에 짧게 호출해 쓸 수 있는/없는 모델 목록이 출력되고, CLAUDE.md 33행이 `MODEL_IDS`와 맞음
 - [x] 1-2 조율 Agent 하나: `create_agent` + 조율 도구 3개 + 기준일·요청자 프롬프트, `run_query()`가 답변 문장을 돌려줌
   - 확인: m-04 질문(`sec-kim`, 기준일 2026-10-26)의 답변에 11-02~11-06 사이 후보 시간 1~3개가 나옴
-- [ ] 1-3 응답 형식: `answer` / `contexts` / `trace`(route, candidates, tool_calls, model, latency_s)
+- [x] 1-3 응답 형식: `answer` / `contexts` / `trace`(route, candidates, tool_calls, model, latency_s)
   - 확인: m-04 결과의 `trace.candidates`가 `find_candidates` 결과와 같고, 키가 정확히 세 개
 - [ ] 1-4 `app.py`의 `POST /query`(requirements에 fastapi·uvicorn 추가). `question`은 필수, `user_id`·`thread_id`·`base_date`는 선택
   - 확인: uvicorn을 띄우고 m-04를 curl로 보내면 200과 세 키가 돌아옴

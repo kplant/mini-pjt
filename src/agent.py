@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1)과 조율 Agent 하나(TASKS 1-2)가 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3)이 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from datetime import date, timedelta
@@ -153,6 +154,62 @@ def _invoke(agent, question: str) -> list:
     return result["messages"]
 
 
+# ---------------------------------------------------------------------------
+# 응답 형식 (TASKS 1-3): answer / contexts / trace
+# trace는 모델의 답변 문장이 아니라 도구 결과만으로 정합니다.
+# ---------------------------------------------------------------------------
+
+def collect_tool_calls(messages: list, agent_name: str) -> list[dict]:
+    """AI 메시지의 도구 호출과 그 결과(ToolMessage)를 짝지어 [{agent, tool, args, result}]로 만듭니다."""
+    results = {m.tool_call_id: m.content for m in messages if getattr(m, "type", "") == "tool"}
+    calls = []
+    for m in messages:
+        for tc in getattr(m, "tool_calls", None) or []:
+            raw = results.get(tc["id"], "")
+            try:
+                result = json.loads(get_text(raw) if not isinstance(raw, str) else raw)
+            except (json.JSONDecodeError, TypeError):
+                result = {"raw": raw}
+            calls.append({"agent": agent_name, "tool": tc["name"], "args": tc["args"], "result": result})
+    return calls
+
+
+def _merge_unique(calls: list[dict], key: str) -> list:
+    """도구 결과의 목록 값을 순서를 지켜 중복 없이 모읍니다."""
+    out = []
+    for c in calls:
+        for v in c["result"].get(key) or []:
+            if v not in out:
+                out.append(v)
+    return out
+
+
+def build_trace(calls: list[dict], route: str | None, model_id: str | None, latency_s: float) -> dict:
+    """도구 결과로 trace를 만듭니다. 판정은 모두 도구가 돌려준 값으로 합니다."""
+    candidate_calls = [c for c in calls if c["tool"] == "tool_find_candidates"]
+    return {
+        "route": route,
+        "refused": any(c["result"].get("denied") for c in calls),
+        "no_answer": any(c["result"].get("no_answer") for c in calls),
+        "candidates": candidate_calls[-1]["result"].get("candidates", []) if candidate_calls else [],
+        "registered_for": _merge_unique(calls, "registered_for"),
+        "pending_approvals": _merge_unique(calls, "pending_approval_for"),
+        "tool_calls": calls,
+        "model": model_id,
+        "latency_s": round(latency_s, 2),
+    }
+
+
+def build_contexts(calls: list[dict]) -> list[dict]:
+    """답변의 근거가 된 도구 결과를 [{source, content}]로 담습니다."""
+    return [{"source": c["tool"], "content": json.dumps(c["result"], ensure_ascii=False)} for c in calls]
+
+
+def _result(answer: str, contexts: list[dict], trace: dict) -> dict:
+    """응답 dict를 만듭니다. 제출 규약의 세 키 말고는 넣지 않습니다."""
+    return {"answer": answer, "contexts": contexts, "trace": trace}
+
+
 def _to_date(value: date | str | None) -> date:
     """기준일을 date로 바꿉니다. 없으면 오늘입니다."""
     if value is None:
@@ -161,14 +218,20 @@ def _to_date(value: date | str | None) -> date:
 
 
 def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | None = None,
-              llm=None, db_path: Path | str = DEFAULT_DB) -> str:
-    """질문 하나를 처리해 답변 문장을 돌려줍니다. 지금은 조율 Agent 하나만 씁니다."""
+              llm=None, db_path: Path | str = DEFAULT_DB) -> dict:
+    """질문 하나를 처리해 {"answer", "contexts", "trace"}를 돌려줍니다. 지금은 조율 Agent 하나만 씁니다."""
+    start = time.time()
     requester: Requester | None = load_requester(user_id, db_path)
     if requester is None:
-        return "등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다."
+        trace = build_trace([], None, None, time.time() - start)
+        trace["refused"] = True
+        return _result("등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다.", [], trace)
     ctx = Ctx(requester, _to_date(base_date), Path(db_path))
+    model_id = "injected" if llm is not None else model_ids()[0]
     messages = _invoke(build_coordination_agent(ctx, llm), question)
-    return get_text(messages[-1])
+    calls = collect_tool_calls(messages, "조율")
+    trace = build_trace(calls, "조율", model_id, time.time() - start)
+    return _result(get_text(messages[-1]), build_contexts(calls), trace)
 
 
 if __name__ == "__main__":
