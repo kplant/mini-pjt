@@ -1,7 +1,7 @@
 """평가 문항 시나리오를 LLM 없이 도구로 직접 재현해 권한·승인 규칙과 RAG 대상 판정을 확인합니다.
 
 실행: python evaluation/check_tools.py
-실제 DB(schedule.sqlite)는 건드리지 않고 임시 폴더의 DB를 씁니다.
+실제 DB(db/schedule.sqlite)는 건드리지 않고 임시 폴더의 DB를 씁니다.
 실패가 하나라도 있으면 종료 코드 1을 돌려줍니다.
 """
 import sys

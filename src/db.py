@@ -12,7 +12,8 @@ import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DB = ROOT / "schedule.sqlite"
+DB_DIR = ROOT / "db"
+DEFAULT_DB = DB_DIR / "schedule.sqlite"
 DEFAULT_SEED = ROOT / "data" / "seed.json"
 
 SCHEMA = """
@@ -132,6 +133,7 @@ def reset_db(db_path: Path | str = DEFAULT_DB, seed_path: Path | str = DEFAULT_S
     파일을 지울 수 없기 때문입니다.
     """
     db_path = Path(db_path)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
     seed = json.loads(Path(seed_path).read_text(encoding="utf-8"))
     conn = connect(db_path)
     try:

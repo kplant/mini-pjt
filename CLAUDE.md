@@ -47,7 +47,7 @@ evaluation/        test_queries.csv 와 평가 리포트
 ## 작업 흐름
 - 계획 → 승인 → plan/task-N-N.md에 저장 → 구현 → TASKS의 "확인" 통과 → `[x]` → plan 파일 끝에 결과(계획과 달라진 점) 추가 → commit `TASKS N-N: 요약`
 - 계획이 바뀌면 plan 파일을 최종본으로 덮어쓴다. push는 요청할 때만 한다.
-- commit 전에 .env, chroma_db/, schedule.sqlite가 빠지는지 확인한다.
+- commit 전에 .env, chroma_db/, db/가 빠지는지 확인한다.
 - 요청하지 않은 파일이 필요하면 경로와 목적을 먼저 묻는다(임시 폴더에 몰래 만들지 않는다).
 - 테스트 보고: 실행한 명령, 출력 원문, 읽는 법, PowerShell 재현 명령을 함께 보여 준다.
 - 답변은 한국어로 한다. 명령·출력 원문은 그대로 둔다.

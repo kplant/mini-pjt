@@ -17,11 +17,11 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
-from src.db import DEFAULT_DB, ROOT, connect
+from src.db import DB_DIR, DEFAULT_DB, connect
 from src.tools import Ctx, Requester, build_tools, load_requester
 
 REGION = "us-east-1"
-CHECKPOINT_DB = ROOT / "checkpoints.sqlite"
+CHECKPOINT_DB = DB_DIR / "checkpoints.sqlite"
 
 # 앞에서부터 차례로 씁니다.
 MODEL_IDS = (
@@ -152,6 +152,7 @@ def _checkpointer():
     if _CHECKPOINTER is None:
         from langgraph.checkpoint.sqlite import SqliteSaver
 
+        CHECKPOINT_DB.parent.mkdir(parents=True, exist_ok=True)
         _CHECKPOINTER = SqliteSaver(sqlite3.connect(CHECKPOINT_DB, check_same_thread=False))
     return _CHECKPOINTER
 
@@ -286,7 +287,7 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
               thread_id: str | None = None, llm=None, db_path: Path | str = DEFAULT_DB) -> dict:
     """질문 하나를 처리해 제출 스펙의 응답을 돌려줍니다. 지금은 조율 Agent 하나만 씁니다.
 
-    thread_id가 있으면 같은 user_id·thread_id의 이전 대화를 이어 갑니다(checkpoints.sqlite).
+    thread_id가 있으면 같은 user_id·thread_id의 이전 대화를 이어 갑니다(db/checkpoints.sqlite).
     대화 키에 user_id를 붙여, 다른 사람이 같은 thread_id를 보내도 앞사람의 대화를 이어받지 못하게 합니다.
     thread_id가 없으면 기억 없이 한 번만 처리합니다.
 

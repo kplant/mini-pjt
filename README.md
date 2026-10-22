@@ -50,7 +50,7 @@ python -m venv .venv
 curl -X POST localhost:8000/query -H "Content-Type: application/json" \
      -d '{"question": "다음 주에 강민준 부사장님과 윤서연 전무님 1시간 회의 잡아줘", "user_id": "sec-kim", "base_date": "2026-10-26"}'
 ```
-요청 본문은 `question`이 필수이고, `user_id`(기본 `sec-kim`), `thread_id`, `base_date`(기본 오늘)는 선택이다. 같은 `user_id`·`thread_id`로 보내면 이전 대화를 이어 간다(`checkpoints.sqlite`). `thread_id`가 없으면 기억 없이 한 번만 처리한다.
+요청 본문은 `question`이 필수이고, `user_id`(기본 `sec-kim`), `thread_id`, `base_date`(기본 오늘)는 선택이다. 같은 `user_id`·`thread_id`로 보내면 이전 대화를 이어 간다(`db/checkpoints.sqlite`). `thread_id`가 없으면 기억 없이 한 번만 처리한다.
 Windows Git Bash에서 한글을 `-d`로 바로 넣으면 UTF-8이 아니게 넘어가 400이 난다. 본문을 UTF-8 파일로 저장해 `--data-binary @m04.json`으로 보내거나, PowerShell에서는 `Invoke-WebRequest ... -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))`로 보낸다.
 
 ## RAGAS 평가 결과
