@@ -4,3 +4,4 @@
 __pycache__/
 schedule.sqlite
 chroma_db/
+checkpoints.sqlite*

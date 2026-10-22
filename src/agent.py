@@ -1,6 +1,6 @@
 """메인 에이전트 그래프입니다.
 
-지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3)이 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
+지금은 모델 연결(TASKS 1-1), 조율 Agent 하나(TASKS 1-2), 응답 형식(TASKS 1-3), 대화 기억(TASKS 2-1)이 있습니다. Supervisor는 다음 작업에서 덧붙입니다.
 
 모델은 후보 여러 개를 순서대로 두고, 앞의 모델이 실패하면 다음 후보로 넘어가 중단 없이 씁니다.
 후보와 순서는 MODEL_IDS에 두며, .env의 BEDROCK_MODEL_IDS(쉼표로 구분)로 덮어쓸 수 있습니다.
@@ -11,15 +11,17 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 import time
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
-from src.db import DEFAULT_DB, connect
+from src.db import DEFAULT_DB, ROOT, connect
 from src.tools import Ctx, Requester, build_tools, load_requester
 
 REGION = "us-east-1"
+CHECKPOINT_DB = ROOT / "checkpoints.sqlite"
 
 # 앞에서부터 차례로 씁니다.
 MODEL_IDS = (
@@ -101,6 +103,7 @@ COORDINATION_PROMPT = """당신은 임원 일정 조율 담당입니다. 참석�
 - 후보 시간은 tool_find_candidates 결과의 번호, 날짜, 시작~끝 시각을 그대로 전합니다.
 - 도구 결과에 denied, no_answer, conflict가 있으면 reason을 그대로 전하고, notice가 있으면 함께 안내합니다.
 - 일정 등록은 사용자가 후보를 고른 뒤에만 합니다.
+- 사용자가 번호로 후보를 고르면 직전 tool_find_candidates 결과에서 그 번호의 start·end와 참석자로 tool_register_event를 호출합니다.
 - 한국어로 짧게 답합니다.
 """
 
@@ -136,8 +139,27 @@ def requester_desc(ctx: Ctx) -> str:
         conn.close()
 
 
-def build_coordination_agent(ctx: Ctx, llm=None):
-    """조율 Agent를 만듭니다. 도구는 ctx의 요청자로 고정되어 권한을 직접 검사합니다."""
+_CHECKPOINTER = None
+
+
+def _checkpointer():
+    """대화 기억용 SqliteSaver를 처음 쓸 때 한 번 만들어 재사용합니다.
+
+    FastAPI가 요청을 스레드풀에서 처리하므로 check_same_thread=False로 엽니다.
+    """
+    global _CHECKPOINTER
+    if _CHECKPOINTER is None:
+        from langgraph.checkpoint.sqlite import SqliteSaver
+
+        _CHECKPOINTER = SqliteSaver(sqlite3.connect(CHECKPOINT_DB, check_same_thread=False))
+    return _CHECKPOINTER
+
+
+def build_coordination_agent(ctx: Ctx, llm=None, checkpointer=None):
+    """조율 Agent를 만듭니다. 도구는 ctx의 요청자로 고정되어 권한을 직접 검사합니다.
+
+    checkpointer가 있으면 thread_id별로 대화를 이어 갑니다. 시스템 프롬프트는 대화 상태에 저장되지 않아 매 턴 새로 만듭니다.
+    """
     from langchain.agents import create_agent
 
     prompt = COORDINATION_PROMPT + "\n" + date_hints(ctx.base_date) + "\n" + requester_desc(ctx)
@@ -145,13 +167,19 @@ def build_coordination_agent(ctx: Ctx, llm=None):
         model=llm or make_model(model_ids()[0]),
         tools=build_tools(ctx)["조율"],
         system_prompt=prompt,
+        checkpointer=checkpointer,
     )
 
 
-def _invoke(agent, question: str) -> list:
-    """Agent를 실행하고 전체 메시지 목록을 돌려줍니다."""
-    result = agent.invoke({"messages": [{"role": "user", "content": question}]})
-    return result["messages"]
+def _invoke(agent, question: str, config: dict | None = None) -> list:
+    """Agent를 실행하고 이번 턴의 메시지만 돌려줍니다.
+
+    대화 기억이 있으면 결과에 이전 턴 메시지도 들어 있어, 마지막 사람 메시지부터 잘라 냅니다.
+    """
+    result = agent.invoke({"messages": [{"role": "user", "content": question}]}, config=config)
+    messages = result["messages"]
+    last_human = max((i for i, m in enumerate(messages) if getattr(m, "type", "") == "human"), default=0)
+    return messages[last_human:]
 
 
 # ---------------------------------------------------------------------------
@@ -238,8 +266,12 @@ def _to_date(value: date | str | None) -> date:
 
 
 def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | None = None,
-              llm=None, db_path: Path | str = DEFAULT_DB) -> dict:
+              thread_id: str | None = None, llm=None, db_path: Path | str = DEFAULT_DB) -> dict:
     """질문 하나를 처리해 제출 스펙의 응답을 돌려줍니다. 지금은 조율 Agent 하나만 씁니다.
+
+    thread_id가 있으면 같은 user_id·thread_id의 이전 대화를 이어 갑니다(checkpoints.sqlite).
+    대화 키에 user_id를 붙여, 다른 사람이 같은 thread_id를 보내도 앞사람의 대화를 이어받지 못하게 합니다.
+    thread_id가 없으면 기억 없이 한 번만 처리합니다.
 
     반환: {"answer": str,
            "contexts": [{"doc_id", "text"}],
@@ -254,7 +286,11 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
         return _result("등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다.", [], trace)
     ctx = Ctx(requester, _to_date(base_date), Path(db_path))
     model_id = "injected" if llm is not None else model_ids()[0]
-    messages = _invoke(build_coordination_agent(ctx, llm), question)
+    checkpointer, config = None, None
+    if thread_id:
+        checkpointer = _checkpointer()
+        config = {"configurable": {"thread_id": f"{user_id}:{thread_id}"}}
+    messages = _invoke(build_coordination_agent(ctx, llm, checkpointer), question, config)
     calls = collect_tool_calls(messages, "조율")
     verdict = judge(calls, "조율", model_id, time.time() - start)
     return _result(get_text(messages[-1]), build_contexts(calls), build_trace(question, calls, verdict))

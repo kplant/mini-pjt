@@ -19,7 +19,7 @@ app = FastAPI(title="임원 일정 관리 Agent")
 class QueryRequest(BaseModel):
     """POST /query 요청 본문입니다. question만 필수입니다.
 
-    thread_id는 지금은 받기만 하고 쓰지 않습니다. 대화 기억(TASKS 2-1)에서 run_query에 넘깁니다.
+    thread_id를 보내면 같은 user_id·thread_id의 이전 대화를 이어 갑니다(예: "2번으로 해줘").
     """
 
     question: str = Field(min_length=1)
@@ -34,4 +34,4 @@ def query(req: QueryRequest) -> dict:
 
     Bedrock 호출이 블로킹이라 async가 아닌 def로 두어 스레드풀에서 실행되게 합니다.
     """
-    return run_query(req.question, req.user_id, req.base_date)
+    return run_query(req.question, req.user_id, req.base_date, thread_id=req.thread_id)

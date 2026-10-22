@@ -42,7 +42,7 @@
   - 확인: 템플릿 제목 9개가 순서대로 있고, 예시 문구(`[프로젝트 이름]`, `Day X`, `0.XX`, `NN`)가 남아 있지 않음
 
 ## 2. 조율 완성
-- [ ] 2-1 대화 기억: `SqliteSaver`(`checkpoints.sqlite`) + `thread_id`로 "2번으로 해줘" 처리
+- [x] 2-1 대화 기억: `SqliteSaver`(`checkpoints.sqlite`) + `thread_id`로 "2번으로 해줘" 처리
   - 확인: m-07 두 턴 뒤 `registered_for=[exec-kang]`, `pending_approval_for=[exec-yoon]`
 - [ ] 2-2 직원·외부 참석자와 후보 없음 안내
   - 확인: m-05(30분), m-06("외부" 안내), m-21(`no_answer`, 후보 0개) 통과
