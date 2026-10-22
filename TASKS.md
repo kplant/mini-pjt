@@ -38,7 +38,7 @@
   - 확인: m-04 응답의 `contexts` 키가 `doc_id`·`text`이고, `trace`의 모든 단계가 `step`·`input`·`output`뿐이며, decision 단계의 `candidates`가 도구 결과와 같음
 - [ ] 1-5 서버 `src/app.py`의 `POST /query`(requirements에 fastapi·uvicorn 추가, 실행은 `uvicorn src.app:app`). `question`은 필수, `user_id`·`thread_id`·`base_date`는 선택
   - 확인: uvicorn을 띄우고 m-04를 curl로 보내면 200과 세 키가 돌아옴
-- [ ] 1-6 README 초안: §4-5 템플릿의 제목 순서대로 프로젝트 내용을 채우고, 수치 칸은 "측정 전"으로 둠
+- [x] 1-6 README 초안: §4-5 템플릿의 제목 순서대로 프로젝트 내용을 채우고, 수치 칸은 "측정 전"으로 둠
   - 확인: 템플릿 제목 9개가 순서대로 있고, 예시 문구(`[프로젝트 이름]`, `Day X`, `0.XX`, `NN`)가 남아 있지 않음
 
 ## 2. 조율 완성
