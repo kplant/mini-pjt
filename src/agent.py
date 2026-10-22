@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import time
 from datetime import date, timedelta
@@ -479,6 +480,39 @@ def decision(trace: list[dict]) -> dict:
     return {}
 
 
+# ---------------------------------------------------------------------------
+# trace 마스킹 (TASKS 4-2, ADR 0004)
+# 연락처는 answer와 contexts에는 그대로 두고, 사람이 직접 보지 않는 trace에서만 일부를 가립니다.
+# 정규식은 Day 5 mask_pii의 전화번호·이메일 패턴을 따릅니다.
+# ---------------------------------------------------------------------------
+
+_PHONE_RE = re.compile(r"(?<!\d)(01[016789]|0[2-6]\d?)([-.\s]?)(\d{3,4})([-.\s]?)(\d{4})(?!\d)")
+_EMAIL_RE = re.compile(r"([A-Za-z0-9._%+-])([A-Za-z0-9._%+-]*)(@[A-Za-z0-9.-]+\.[A-Za-z]{2,})")
+
+
+def mask_pii(text: str) -> str:
+    """전화번호와 이메일의 일부를 가립니다. 예: 010-****-5678, p***@abc.example"""
+    text = _PHONE_RE.sub(lambda m: m[1] + m[2] + "*" * len(m[3]) + m[4] + m[5], text)
+    return _EMAIL_RE.sub(lambda m: m[1] + "***" + m[3], text)
+
+
+def _mask_value(value: Any) -> Any:
+    """dict·list 안의 문자열까지 돌며 mask_pii를 적용합니다."""
+    if isinstance(value, str):
+        return mask_pii(value)
+    if isinstance(value, dict):
+        return {k: _mask_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_mask_value(v) for v in value]
+    return value
+
+
+def mask_trace(trace: list[dict]) -> list[dict]:
+    """decision을 뺀 모든 단계의 input·output을 마스킹합니다. decision은 평가기가 그대로 비교합니다."""
+    return [s if s["step"] == "decision" else _step(s["step"], _mask_value(s["input"]), _mask_value(s["output"]))
+            for s in trace]
+
+
 def build_contexts(calls: list[dict]) -> list[dict]:
     """답변의 근거가 된 도구 결과를 [{doc_id, text}]로 담습니다.
 
@@ -538,7 +572,7 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
         or ("injected" if llm is not None else model_ids()[0])
     verdict = judge(calls, route, model_id, time.time() - start)
     answer = get_text(messages[-1])
-    return _result(answer, build_contexts(calls), build_trace(question, calls, verdict))
+    return _result(answer, build_contexts(calls), mask_trace(build_trace(question, calls, verdict)))
 
 
 if __name__ == "__main__":

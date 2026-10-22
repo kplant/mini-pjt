@@ -148,5 +148,13 @@ r = R.search_intro(store, "GHI사 송재원 이사", "최근 소식")
 check("m-24", r.get("no_answer") and r["results"] == [], text(r))
 check("검색 도구 생성", R.build_search_tool(store).name == "tool_search_intro")
 
+# trace 마스킹(TASKS 4-2): 연락처는 일부만 가리고, 일시·일정 ID·승인 ID는 그대로 둡니다.
+from src.agent import mask_pii  # noqa: E402
+
+r = mask_pii("전화 010-1234-5678, 이메일 park@abc.example")
+check("m-13 연락처 마스킹", r == "전화 010-****-5678, 이메일 p***@abc.example", r)
+s = '{"event_id": "ev-04", "start": "2026-10-28T11:00", "end": "2026-10-28T12:00", "approval_id": "ap-01"}'
+check("마스킹이 일시·ID를 건드리지 않음", mask_pii(s) == s, mask_pii(s))
+
 print("\nFAILS:", fails)
 sys.exit(1 if fails else 0)
