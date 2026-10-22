@@ -72,7 +72,7 @@
   - 확인: 24문항을 1회 돌리면 문항별 PASS/FAIL 표가 출력됨
 - [x] 5-2 RAGAS 측정: requirements에 ragas 추가(사용자 승인), 평가자는 Bedrock 모델과 Titan 임베딩. 근거 문서가 있는 문항(소개 자료 RAG, 조회·브리핑)에 context_recall·context_precision·faithfulness·answer_relevancy 적용. Python 3.14 호환은 이때 확인
   - 확인: 4개 지표 값이 한 번의 실행으로 출력되고 라운드 리포트에 들어감
-- [ ] 5-3 1라운드 평가와 리포트 `evaluation/round1_report.md`: 3회 실행해 SERVICE.md 5번의 기준 5개와 RAGAS 4개 지표 기록
+- [x] 5-3 1라운드 평가와 리포트 `evaluation/round1_report.md`: 3회 실행해 SERVICE.md 5번의 기준 5개와 RAGAS 4개 지표 기록
   - 확인: `round1_report.md`에 기준 5개가 각각 통과/미달로, 실패 문항이 원인과 함께 적혀 있음
 - [ ] 5-4 실패 문항 고치기 (작업 1개 = 실패 원인 1개). 고친 뒤 다음 라운드를 돌려 `round2_report.md`, `round3_report.md`…를 남김. 이전 라운드 리포트는 덮어쓰지 않음
   - 확인: 마지막 라운드 리포트에서 3회 모두 정답률 22/24, guardrail 4/4, 라우팅 18/20 이상이고, 이전 라운드와 비교해 나아진 문항과 나빠진 문항이 적혀 있음

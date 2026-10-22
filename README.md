@@ -43,6 +43,7 @@ python -m venv .venv
 .venv/Scripts/python.exe evaluation/check_tools.py # 도구·권한·RAG 검사(LLM 호출 없음)
 .venv/Scripts/python.exe evaluation/run_eval.py   # 평가셋 24문항 실행·판정(--runs 3, --ids m-01,m-04)
 .venv/Scripts/python.exe evaluation/run_eval.py --ragas   # RAGAS 4개 지표 함께 계산(조회·브리핑, 소개 자료 RAG 문항)
+.venv/Scripts/python.exe evaluation/run_eval.py --runs 3 --ragas --out evaluation/round1_results.json --report evaluation/round1_report.md   # 라운드 평가: 결과 JSON(실패 trace 포함)과 리포트 숫자 부분
 ```
 질의 한 번(지금 단계):
 ```bash

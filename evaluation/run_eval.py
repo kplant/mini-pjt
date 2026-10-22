@@ -176,8 +176,9 @@ def evaluate(cases: list[dict]) -> list[dict]:
         d = decision(resp["trace"]) if resp else {}
         results.append({"id": case["id"], "type": case["type"], "route": d.get("route"),
                         "expected_route": case["expected_route"], "turns": len(case["turns"]),
-                        "latencies": run["latencies"], "fails": fails, "question": case["turns"][-1],
-                        "answer": resp.get("answer", ""), "contexts": [c["text"] for c in resp.get("contexts", [])]})
+                        "latencies": run["latencies"], "fails": fails, "model": d.get("model"),
+                        "question": case["turns"][-1], "answer": resp.get("answer", ""),
+                        "contexts": [c["text"] for c in resp.get("contexts", [])], "trace": resp.get("trace", [])})
         print(f"  {case['id']} {'PASS' if not fails else 'FAIL'} {run['latencies']}", flush=True)
     db.reset_db()
     return results
@@ -275,6 +276,84 @@ def print_ragas(all_scores: list[dict]) -> None:
         print(f"| {cid} | " + " | ".join(str(row[n]) for n in RAGAS_METRICS.values()) + " |")
 
 
+def run_info(args) -> dict:
+    """결과 파일과 리포트 머리에 남길 실행 정보입니다."""
+    import subprocess
+
+    from src.agent import model_ids, supervisor_model_ids
+
+    def git(*cmd: str) -> str:
+        try:
+            return subprocess.run(["git", *cmd], cwd=root, capture_output=True, text=True).stdout.strip()
+        except OSError:
+            return ""
+
+    return {
+        "started_at": datetime.now().isoformat(timespec="seconds"),
+        "commit": git("rev-parse", "--short", "HEAD") + (" (작업 중 변경 있음)" if git("status", "--porcelain", "src", "evaluation/run_eval.py") else ""),
+        "runs": args.runs, "ids": args.ids or "전체", "ragas": args.ragas,
+        "model_ids": model_ids(), "supervisor_first": supervisor_model_ids()[0],
+    }
+
+
+def save_results(path: str, info: dict, runs: list[dict]) -> None:
+    """실행 결과를 JSON으로 저장합니다. trace와 contexts는 실패 문항만 남깁니다(연락처는 이미 가려진 trace)."""
+    def slim(r: dict) -> dict:
+        keep = {k: v for k, v in r.items() if k not in ("trace", "contexts")}
+        if r["fails"]:
+            keep.update(trace=r["trace"], contexts=r["contexts"])
+        return keep
+
+    data = {"info": info, "runs": [{"summary": run["summary"], "meets": meets(run["summary"]), "ragas": run["ragas"],
+                                    "results": [slim(r) for r in run["results"]]} for run in runs]}
+    Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def build_report(info: dict, runs: list[dict], title: str) -> str:
+    """리포트의 숫자 부분을 Markdown으로 만듭니다. 끝의 '실패 원인 분석' 절은 사람이 채웁니다."""
+    def cell(v) -> str:
+        return f"{v[0]}/{v[1]}" if isinstance(v, (tuple, list)) else ("-" if v is None else ("통과" if v else "미달"))
+
+    n = len(runs)
+    heads = " | ".join(f"{i + 1}회" for i in range(n))
+    lines = [f"# {title}", "",
+             f"- 실행: {info['started_at']}, 커밋 {info['commit']}, 문항 {info['ids']}, {n}회",
+             f"- 모델: Agent 1순위 `{info['model_ids'][0]}`, Supervisor 1순위 `{info['supervisor_first']}`"
+             f" (실패하면 `{', '.join(info['model_ids'][1:3])}` … 순으로 대체)",
+             "- 판정: `evaluation/run_eval.py`가 decision 단계와 실행 후 DB 상태로 자동 판정"
+             f"(결과 원본: `{info.get('out', '')}`)", "",
+             "## 1. 성공 기준 (SERVICE.md 5번, 모든 회차에서 넘어야 통과)", "",
+             f"| 기준 | {heads} | 판정 |", "|---" * (n + 2) + "|"]
+    targets = {"정답률": "22/24 이상", "권한": "4/4", "라우팅": "18/20 이상", "10초 초과": "0건",
+               "조율 효율(m-07)": "통과"}
+    for key in runs[0]["summary"]:
+        ok = all(meets(r["summary"])[key] for r in runs)
+        lines.append(f"| {key} (기준 {targets[key]}) | " + " | ".join(cell(r["summary"][key]) for r in runs)
+                     + f" | **{'통과' if ok else '미달'}** |")
+    if any(r["ragas"] for r in runs):
+        lines += ["", "## 2. RAGAS (근거 문서가 있는 문항: " + ", ".join(RAGAS_REFERENCES) + ")", "",
+                  f"| 지표 | {heads} |", "|---" * (n + 1) + "|"]
+        for name in RAGAS_METRICS.values():
+            lines.append(f"| {name} | " + " | ".join(str((r["ragas"] or {}).get("mean", {}).get(name, "-")) for r in runs) + " |")
+        lines += ["", "문항별(마지막 회차):", "", "| 문항 | " + " | ".join(RAGAS_METRICS.values()) + " |",
+                  "|---" * (len(RAGAS_METRICS) + 1) + "|"]
+        for cid, row in runs[-1]["ragas"]["per_case"].items():
+            lines.append(f"| {cid} | " + " | ".join(str(row[m]) for m in RAGAS_METRICS.values()) + " |")
+    lines += ["", "## 3. 문항별 결과", "", f"| 문항 | 유형 | {heads} |", "|---" * (n + 2) + "|"]
+    for i, r0 in enumerate(runs[0]["results"]):
+        lines.append(f"| {r0['id']} | {r0['type']} | "
+                     + " | ".join("PASS" if not r["results"][i]["fails"] else "**FAIL**" for r in runs) + " |")
+    lines += ["", "## 4. 실패 문항", ""]
+    fails = [(k + 1, r) for k, run in enumerate(runs) for r in run["results"] if r["fails"]]
+    lines += [f"- {k}회 {r['id']}: {'; '.join(r['fails'])} — 답변: {r['answer'][:80]!r}" for k, r in fails] or ["- 없음"]
+    lines += ["", f"## 5. {LIMIT_S}초 초과 요청", "", "| 회차 | 문항 | 턴 | 응답(초) | 답한 모델 |", "|---|---|---|---|---|"]
+    slow = [(k + 1, r, t + 1, s) for k, run in enumerate(runs) for r in run["results"]
+            for t, s in enumerate(r["latencies"]) if s > LIMIT_S]
+    lines += [f"| {k} | {r['id']} | {t} | {s} | {r['model']} |" for k, r, t, s in slow] or ["| - | 없음 | | | |"]
+    lines += ["", "## 6. 실패 원인 분석", "", "(작성 예정)", ""]
+    return "\n".join(lines)
+
+
 def print_table(results: list[dict]) -> None:
     """문항별 PASS/FAIL 표를 출력합니다."""
     print(f"| {'id':<5} | {'type':<12} | 결과 | {'route':<4} | 최대 응답(초) | 실패 이유")
@@ -303,22 +382,35 @@ def main() -> None:
     parser.add_argument("--runs", type=int, default=1, help="전체 실행 횟수")
     parser.add_argument("--ids", default="", help="쉼표로 구분한 문항 id(비우면 전체)")
     parser.add_argument("--ragas", action="store_true", help="RAGAS 4개 지표도 계산(근거 문서가 있는 문항)")
+    parser.add_argument("--out", default="", help="실행 결과 JSON 경로(실패 문항 trace 포함)")
+    parser.add_argument("--report", default="", help="리포트 Markdown 경로(숫자 부분 자동 생성)")
     args = parser.parse_args()
     cases = load_cases([i.strip() for i in args.ids.split(",") if i.strip()])
-    summaries, all_scores = [], []
+    info = {**run_info(args), "out": args.out}
+    runs = []
     for n in range(args.runs):
         print(f"\n## {n + 1}회차 ({len(cases)}문항)", flush=True)
         results = evaluate(cases)
         print()
         print_table(results)
-        summaries.append(summarize(results))
+        scores = None
         if args.ragas:
             start = time.time()
-            all_scores.append(ragas_scores(results))
+            try:
+                scores = ragas_scores(results)
+            except Exception as exc:  # noqa: BLE001 - RAGAS가 실패해도 판정 결과는 남깁니다
+                print(f"RAGAS 실패: {type(exc).__name__}: {str(exc)[:120]}")
             print(f"\n(RAGAS 계산 {time.time() - start:.1f}초)", flush=True)
-    print_summary(summaries)
-    if all_scores:
-        print_ragas(all_scores)
+        runs.append({"results": results, "summary": summarize(results), "ragas": scores})
+        if args.out:  # 회차마다 저장해 중간에 멈춰도 결과가 남게 합니다
+            save_results(args.out, info, runs)
+    print_summary([r["summary"] for r in runs])
+    if any(r["ragas"] for r in runs):
+        print_ragas([r["ragas"] or {"mean": {}, "per_case": {}} for r in runs])
+    if args.report:
+        title = f"{Path(args.report).stem.removesuffix('_report')} 평가 리포트"
+        Path(args.report).write_text(build_report(info, runs, title), encoding="utf-8")
+        print(f"\n리포트: {args.report}")
 
 
 if __name__ == "__main__":
