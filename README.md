@@ -30,6 +30,13 @@ POST /query (src/app.py)
 - 구현 범위: 서버 → Supervisor → 조율·일정·관리 Agent와 평가 3라운드까지(TASKS 5까지).
 
 ## 실행 방법
+설치 뒤에는 `run.sh` 하나로 실행한다(Git Bash·macOS·Linux, `.venv`의 Python을 먼저 찾는다).
+```bash
+bash run.sh serve [포트]    # 서버(기본 8000, HOST=0.0.0.0으로 바인딩 주소 변경). DB가 없으면 만든다
+bash run.sh eval [인자...]   # 평가(evaluation/run_eval.py에 인자 그대로, 예: --runs 3 --ragas --judge)
+bash run.sh demo            # 시연 8단계(서버를 띄운 다른 창에서)
+```
+설치와 개별 명령:
 ```bash
 python -m venv .venv
 .venv/Scripts/python.exe -m pip install -r requirements.txt   # macOS/Linux: .venv/bin/python

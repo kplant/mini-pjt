@@ -92,7 +92,7 @@
   - 확인: README에 "측정 전"이 남아 있지 않고 ADR 링크가 열림
 - [x] 6-2 제출: 폴더 이름은 바꾸지 않고 `mini-pjt` 저장소를 원격(`origin`)에 push해 제출(사용자 결정, 2026-10-23). ADR 0001을 이 방식으로 고침
   - 확인: 제출할 커밋에서 서버를 띄우고 m-04를 curl로 보내면 200, push 후 원격과 로컬이 같음
-- [ ] 6-3 `run.sh`: 서버 실행(`serve`)과 평가 실행(`eval`)
+- [x] 6-3 `run.sh`: 서버 실행(`serve`)과 평가 실행(`eval`)
   - 확인: Git Bash에서 `bash run.sh serve`로 서버가 뜨고 curl m-04가 200
 - [ ] 6-4 `Dockerfile`: 클린 환경 재현. AWS 자격 증명은 이미지에 넣지 않고 실행할 때 `--env-file .env`로 넘김
   - 확인: `docker build` 후 `docker run -p 8000:8000 --env-file .env`로 curl m-04가 200(Docker가 없으면 보고하고 확인 방법을 정함)
