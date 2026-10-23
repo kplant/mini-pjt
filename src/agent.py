@@ -19,6 +19,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from langchain_core.callbacks import BaseCallbackHandler
+
 from src.db import DB_DIR, DEFAULT_DB, connect
 from src.tools import Ctx, Requester, build_tools, load_requester
 
@@ -312,11 +314,49 @@ def answered_model(messages: list) -> str | None:
     return None
 
 
-def _invoke(agent, question: str, config: dict | None = None) -> list:
-    """Agent를 실행하고 이번 턴의 메시지만 돌려줍니다.
+class StepTimer(BaseCallbackHandler):
+    """하위 Agent 안의 모델 호출과 도구 호출 시간을 재는 LangChain 콜백입니다(TASKS 5-4-1).
+
+    실패한 모델 호출(모델 대체로 넘어간 호출)은 model_failed에 따로 둡니다.
+    """
+
+    def __init__(self):
+        self.starts, self.model, self.model_failed, self.tools = {}, [], [], []
+        self.model_spans = []  # 성공한 모델 호출의 (시작, 끝) 시각
+
+    def on_chat_model_start(self, serialized, messages, *, run_id, **kwargs):
+        """모델 호출 시작 시각을 적습니다."""
+        self.starts[run_id] = time.time()
+
+    def on_llm_end(self, response, *, run_id, **kwargs):
+        """성공한 모델 호출의 시간을 남깁니다."""
+        started, now = self.starts.pop(run_id, time.time()), time.time()
+        self.model.append(round(now - started, 2))
+        self.model_spans.append((started, now))
+
+    def on_llm_error(self, error, *, run_id, **kwargs):
+        """실패한 모델 호출의 시간을 남깁니다."""
+        self.model_failed.append(round(time.time() - self.starts.pop(run_id, time.time()), 2))
+
+    def on_tool_start(self, serialized, input_str, *, run_id, **kwargs):
+        """도구 호출 시작 시각과 이름을 적습니다."""
+        self.starts[run_id] = (time.time(), (serialized or {}).get("name", "tool"))
+
+    def on_tool_end(self, output, *, run_id, **kwargs):
+        """도구 호출 시간을 남깁니다."""
+        started, name = self.starts.pop(run_id, (time.time(), "tool"))
+        self.tools.append([name, round(time.time() - started, 2)])
+
+    on_tool_error = on_tool_end
+
+
+def _invoke(agent, question: str, config: dict | None = None, timer=None) -> list:
+    """Agent를 실행하고 이번 턴의 메시지만 돌려줍니다. timer(StepTimer)를 주면 콜백으로 붙입니다.
 
     대화 기억이 있으면 결과에 이전 턴 메시지도 들어 있어, 마지막 사람 메시지부터 잘라 냅니다.
     """
+    if timer is not None:
+        config = {**(config or {}), "callbacks": [timer]}
     result = agent.invoke({"messages": [{"role": "user", "content": question}]}, config=config)
     messages = result["messages"]
     last_human = max((i for i, m in enumerate(messages) if getattr(m, "type", "") == "human"), default=0)
@@ -375,9 +415,12 @@ def build_supervisor(ctx: Ctx, question: str, sink: list, llm=None, checkpointer
     def sub_agent_tool(tool_name: str, route: str, build, description: str):
         def run() -> str:
             config = {"configurable": {"thread_id": f"{thread_key}:{route}"}} if thread_key else None
-            messages = _invoke(build(ctx, llm, checkpointer), question, config)
+            started, timer = time.time(), StepTimer()
+            messages = _invoke(build(ctx, llm, checkpointer), question, config, timer)
             calls = collect_tool_calls(messages, route)
-            sink.append({"route": route, "calls": calls, "model": answered_model(messages)})
+            sink.append({"route": route, "calls": calls, "model": answered_model(messages),
+                         "timing": {"start": started, "end": time.time(), "model": timer.model,
+                                    "model_failed": timer.model_failed, "tools": timer.tools}})
             return ensure_notices(get_text(messages[-1]), calls)
 
         return StructuredTool.from_function(run, name=tool_name, description=description, return_direct=True)
@@ -458,8 +501,36 @@ def _step(step: str, input_: Any, output: Any) -> dict:
     return {"step": step, "input": input_, "output": output}
 
 
-def build_trace(question: str, calls: list[dict], verdict: dict) -> list[dict]:
-    """trace를 단계 목록으로 만듭니다: route → 도구 호출들 → decision(판정 값).
+def build_timing(start: float, end: float, sink: list[dict], sup_timer: StepTimer | None = None) -> dict:
+    """구간별 소요 시간(초)을 만듭니다(TASKS 5-4-1).
+
+    supervisor: 요청을 받은 때부터 하위 Agent가 시작될 때까지. model은 라우팅 모델 호출,
+                other는 나머지(요청자 확인, 모델·Agent 생성 — 프로세스의 첫 요청이면 클라이언트 생성 포함)
+    agent: 하위 Agent 전체와 그 안의 모델 호출·도구 호출, 나머지(other: Agent 생성·프롬프트 준비 등)
+    after: 하위 Agent가 끝난 뒤부터 응답까지
+    """
+    sub_start = sink[0]["timing"]["start"] if sink else end
+    sup_model = [round(e - s, 2) for s, e in (sup_timer.model_spans if sup_timer else []) if e <= sub_start]
+    sup_total = sub_start - start
+    supervisor = {"total": round(sup_total, 2), "model": sup_model, "other": round(sup_total - sum(sup_model), 2)}
+    if not sink:
+        return {"supervisor": supervisor, "agent": None, "after": 0.0, "total": round(end - start, 2)}
+    spans = [s["timing"] for s in sink]
+    model = [x for t in spans for x in t["model"]]
+    failed = [x for t in spans for x in t["model_failed"]]
+    tools = [x for t in spans for x in t["tools"]]
+    agent_total = sum(t["end"] - t["start"] for t in spans)
+    return {
+        "supervisor": supervisor,
+        "agent": {"total": round(agent_total, 2), "model": model, "model_failed": failed, "tools": tools,
+                  "other": round(agent_total - sum(model) - sum(failed) - sum(t for _, t in tools), 2)},
+        "after": round(end - spans[-1]["end"], 2),
+        "total": round(end - start, 2),
+    }
+
+
+def build_trace(question: str, calls: list[dict], verdict: dict, timing: dict | None = None) -> list[dict]:
+    """trace를 단계 목록으로 만듭니다: route → 도구 호출들 → timing(구간별 시간) → decision(판정 값).
 
     소개 자료 검색 단계는 제출 스펙 예시대로 이름을 retrieve로 둡니다.
     """
@@ -468,6 +539,8 @@ def build_trace(question: str, calls: list[dict], verdict: dict) -> list[dict]:
 
     steps = [_step("route", question, verdict["route"])]
     steps += [_step(name(c), c["args"], c["result"]) for c in calls]
+    if timing is not None:
+        steps.append(_step("timing", "구간별 소요 시간(초)", timing))
     steps.append(_step("decision", "도구 결과로 판정", verdict))
     return steps
 
@@ -565,14 +638,17 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
         thread_key = f"{user_id}:{thread_id}"
         config = {"configurable": {"thread_id": thread_key}}
     sink: list[dict] = []
-    messages = _invoke(build_supervisor(ctx, question, sink, llm, checkpointer, thread_key), question, config)
+    sup_timer = StepTimer()
+    messages = _invoke(build_supervisor(ctx, question, sink, llm, checkpointer, thread_key), question, config, sup_timer)
     calls = [c for s in sink for c in s["calls"]]
     route = sink[-1]["route"] if sink else None
     model_id = (sink[-1]["model"] if sink else None) or answered_model(messages) \
         or ("injected" if llm is not None else model_ids()[0])
-    verdict = judge(calls, route, model_id, time.time() - start)
+    end = time.time()
+    verdict = judge(calls, route, model_id, end - start)
     answer = get_text(messages[-1])
-    return _result(answer, build_contexts(calls), mask_trace(build_trace(question, calls, verdict)))
+    trace = build_trace(question, calls, verdict, build_timing(start, end, sink, sup_timer))
+    return _result(answer, build_contexts(calls), mask_trace(trace))
 
 
 if __name__ == "__main__":

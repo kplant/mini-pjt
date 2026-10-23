@@ -1,6 +1,6 @@
 """평가셋(evaluation/test_queries.csv)을 실행하고 expect를 코드로 판정합니다.
 
-실행: python evaluation/run_eval.py [--runs 1] [--ids m-01,m-04] [--ragas] [--judge] [--out 결과.json] [--report 리포트.md]
+실행: python evaluation/run_eval.py [--runs 1] [--ids m-01,m-04] [--ragas] [--judge] [--out 결과.json] [--report 리포트.md] [--compare 이전결과.json]
 --ragas를 주면 근거 문서가 있는 문항(RAGAS_REFERENCES)의 응답으로 RAGAS 4개 지표도 계산합니다(TASKS 5-2).
 --judge를 주면 모든 문항의 답변을 LLM이 정확성·완결성·안전성 1~5점으로 채점합니다(TASKS 5-3a).
 --rejudge 결과.json --report 리포트.md는 저장된 답변으로 다시 채점해 리포트에 절을 끼워 넣습니다(질문을 다시 보내지 않음).
@@ -65,18 +65,23 @@ def load_cases(ids: list[str] | None = None) -> list[dict]:
 
 
 def run_case(case: dict) -> dict:
-    """DB를 초기화하고 문항을 실행합니다. 반환: {"response", "latencies", "error"}"""
+    """DB를 초기화하고 문항을 실행합니다. 반환: {"response", "latencies", "timings", "error"}
+
+    timings는 턴마다 trace의 timing 단계(구간별 소요 시간)입니다.
+    """
     db.reset_db()
     thread_id = str(uuid.uuid4())
-    response, latencies = None, []
+    response, latencies, timings = None, [], []
     try:
         for q in case["turns"]:
             start = time.time()
             response = run_query(q, case["user_id"], case["base_date"], thread_id=thread_id)
             latencies.append(round(time.time() - start, 2))
-        return {"response": response, "latencies": latencies, "error": ""}
+            timings.append(next((s["output"] for s in response["trace"] if s["step"] == "timing"), None))
+        return {"response": response, "latencies": latencies, "timings": timings, "error": ""}
     except Exception as exc:  # noqa: BLE001 - 한 문항의 오류로 평가 전체를 멈추지 않습니다
-        return {"response": response, "latencies": latencies, "error": f"{type(exc).__name__}: {str(exc)[:120]}"}
+        return {"response": response, "latencies": latencies, "timings": timings,
+                "error": f"{type(exc).__name__}: {str(exc)[:120]}"}
 
 
 def _rows(sql: str, *args) -> list[tuple]:
@@ -178,7 +183,8 @@ def evaluate(cases: list[dict]) -> list[dict]:
         d = decision(resp["trace"]) if resp else {}
         results.append({"id": case["id"], "type": case["type"], "route": d.get("route"),
                         "expected_route": case["expected_route"], "turns": len(case["turns"]),
-                        "latencies": run["latencies"], "fails": fails, "model": d.get("model"), "decision": d,
+                        "latencies": run["latencies"], "timings": run.get("timings", []),
+                        "fails": fails, "model": d.get("model"), "decision": d,
                         "question": case["turns"][-1], "answer": resp.get("answer", ""),
                         "contexts": [c["text"] for c in resp.get("contexts", [])], "trace": resp.get("trace", [])})
         print(f"  {case['id']} {'PASS' if not fails else 'FAIL'} {run['latencies']}", flush=True)
@@ -401,6 +407,97 @@ def rejudge(json_path: str, report_path: str) -> None:
         print(f"{i + 1}회", run["judge"]["mean"], "낮은 문항", [x["id"] for x in run["judge"]["low"]])
 
 
+def _timing_brief(t: dict | None) -> str:
+    """timing 한 건을 짧은 글로 줄입니다. 예: 'Sup 2.1+0.0 / 모델 3회 6.7 / 도구 0.0 / 기타 1.1'"""
+    if not t:
+        return "-"
+    s, a = t["supervisor"], t.get("agent") or {"model": [], "tools": [], "other": 0}
+    sup = f"Sup {sum(s['model']):.1f}+{s['other']:.1f}" if isinstance(s, dict) else f"Sup {s:.1f}"
+    return (f"{sup} / 모델 {len(a['model'])}회 {sum(a['model']):.1f} / 도구 {sum(x for _, x in a['tools']):.1f}"
+            f" / 기타 {a['other']:.1f}")
+
+
+def timing_section(runs: list[dict]) -> list[str]:
+    """요청 전체의 구간별 평균과, 하위 Agent의 모델 호출 횟수별 평균 응답 시간을 만듭니다."""
+    ts = [t for run in runs for r in run["results"] for t in r.get("timings") or [] if t and t.get("agent")]
+    if not ts:
+        return []
+
+    def avg(xs: list[float]) -> float:
+        return round(sum(xs) / len(xs), 2) if xs else 0.0
+
+    rows = [
+        ("Supervisor 라우팅 모델 호출", avg([sum(t["supervisor"]["model"]) for t in ts])),
+        ("Supervisor 그 밖(요청자 확인·생성, 첫 요청은 클라이언트 생성)", avg([t["supervisor"]["other"] for t in ts])),
+        ("하위 Agent 모델 호출 합", avg([sum(t["agent"]["model"]) for t in ts])),
+        ("하위 Agent 실패한 모델 호출(대체 전)", avg([sum(t["agent"]["model_failed"]) for t in ts])),
+        ("하위 Agent 도구 호출 합", avg([sum(x for _, x in t["agent"]["tools"]) for t in ts])),
+        ("하위 Agent 그 밖(Agent 생성·프롬프트 준비)", avg([t["agent"]["other"] for t in ts])),
+        ("응답 마무리", avg([t["after"] for t in ts])),
+        ("합계", avg([t["total"] for t in ts])),
+    ]
+    model_one = [x for t in ts for x in t["supervisor"]["model"] + t["agent"]["model"]]
+    lines = ["", "## 5-1. 응답 시간 구간 (trace의 timing 단계)", "",
+             f"하위 Agent까지 간 요청 {len(ts)}건의 평균. 모델 호출 1회 평균 {avg(model_one)}초.", "",
+             "| 구간 | 평균(초) |", "|---|---|"]
+    lines += [f"| {name} | {v} |" for name, v in rows]
+    by_calls: dict[int, list[float]] = {}
+    for t in ts:
+        by_calls.setdefault(1 + len(t["agent"]["model"]), []).append(t["total"])
+    lines += ["", "| 모델 호출 수(Supervisor 포함) | 요청 수 | 평균 응답(초) | 10초 초과 |", "|---|---|---|---|"]
+    lines += [f"| {n} | {len(v)} | {avg(v)} | {sum(x > LIMIT_S for x in v)} |" for n, v in sorted(by_calls.items())]
+    return lines
+
+
+def compare_section(prev: dict, runs: list[dict], prev_name: str) -> list[str]:
+    """이전 라운드 결과(JSON)와 이번 결과를 비교하는 절을 만듭니다(TASKS 5-4)."""
+    def cell(v) -> str:
+        return f"{v[0]}/{v[1]}" if isinstance(v, (tuple, list)) else ("-" if v is None else ("통과" if v else "미달"))
+
+    def mean_of(rs: list[dict], key: str, item: str):
+        vals = [(r.get(key) or {}).get("mean", {}).get(item) for r in rs]
+        vals = [v for v in vals if v is not None]
+        return round(sum(vals) / len(vals), 3) if vals else None
+
+    def per_case(rs: list[dict]) -> dict:
+        out = {}
+        for run in rs:
+            for r in run["results"]:
+                c = out.setdefault(r["id"], {"pass": 0, "lat": []})
+                c["pass"] += not r["fails"]
+                c["lat"] += r["latencies"]
+        return out
+
+    prev_runs = prev["runs"]
+    lines = ["", f"## 1-1. 이전 라운드와 비교 (`{prev_name}`)", "",
+             "| 기준 | 이전 | 이번 |", "|---|---|---|"]
+    for key in runs[0]["summary"]:
+        lines.append(f"| {key} | " + " · ".join(cell(r["summary"][key]) for r in prev_runs) + " | "
+                     + " · ".join(cell(r["summary"][key]) for r in runs) + " |")
+    for key, items in (("ragas", RAGAS_METRICS.values()), ("judge", JUDGE_ITEMS)):
+        for item in items:
+            a, b = mean_of(prev_runs, key, item), mean_of(runs, key, item)
+            if a is not None or b is not None:
+                lines.append(f"| {key} {JUDGE_ITEMS.get(item, item)} 평균 | {a if a is not None else '-'} | {b if b is not None else '-'} |")
+    old, new = per_case(prev_runs), per_case(runs)
+    better, worse, rows = [], [], []
+    for cid in new:
+        o, n = old.get(cid), new[cid]
+        if not o:
+            continue
+        lo, ln = sum(o["lat"]) / len(o["lat"]), sum(n["lat"]) / len(n["lat"])
+        d = ln - lo
+        rows.append(f"| {cid} | {o['pass']}/{len(prev_runs)} → {n['pass']}/{len(runs)} | {lo:.2f} → {ln:.2f} ({d:+.2f}) |")
+        if n["pass"] / len(runs) > o["pass"] / len(prev_runs) or d <= -1.0:
+            better.append(cid)
+        if n["pass"] / len(runs) < o["pass"] / len(prev_runs) or d >= 1.0:
+            worse.append(cid)
+    lines += ["", f"- 나아진 문항(통과율 상승 또는 평균 응답 1초 이상 단축): {', '.join(better) or '없음'}",
+              f"- 나빠진 문항(통과율 하락 또는 평균 응답 1초 이상 증가): {', '.join(worse) or '없음'}", "",
+              "| 문항 | 통과 | 평균 응답(초) |", "|---|---|---|"] + rows
+    return lines
+
+
 def run_info(args) -> dict:
     """결과 파일과 리포트 머리에 남길 실행 정보입니다."""
     import subprocess
@@ -435,7 +532,7 @@ def save_results(path: str, info: dict, runs: list[dict]) -> None:
     Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def build_report(info: dict, runs: list[dict], title: str) -> str:
+def build_report(info: dict, runs: list[dict], title: str, prev: dict | None = None) -> str:
     """리포트의 숫자 부분을 Markdown으로 만듭니다. 끝의 '실패 원인 분석' 절은 사람이 채웁니다."""
     def cell(v) -> str:
         return f"{v[0]}/{v[1]}" if isinstance(v, (tuple, list)) else ("-" if v is None else ("통과" if v else "미달"))
@@ -456,6 +553,8 @@ def build_report(info: dict, runs: list[dict], title: str) -> str:
         ok = all(meets(r["summary"])[key] for r in runs)
         lines.append(f"| {key} (기준 {targets[key]}) | " + " | ".join(cell(r["summary"][key]) for r in runs)
                      + f" | **{'통과' if ok else '미달'}** |")
+    if prev:
+        lines += compare_section(prev, runs, info.get("compare", ""))
     if any(r["ragas"] for r in runs):
         lines += ["", "## 2. RAGAS (근거 문서가 있는 문항: " + ", ".join(RAGAS_REFERENCES) + ")", "",
                   f"| 지표 | {heads} |", "|---" * (n + 1) + "|"]
@@ -474,10 +573,13 @@ def build_report(info: dict, runs: list[dict], title: str) -> str:
     lines += ["", "## 4. 실패 문항", ""]
     fails = [(k + 1, r) for k, run in enumerate(runs) for r in run["results"] if r["fails"]]
     lines += [f"- {k}회 {r['id']}: {'; '.join(r['fails'])} — 답변: {r['answer'][:80]!r}" for k, r in fails] or ["- 없음"]
-    lines += ["", f"## 5. {LIMIT_S}초 초과 요청", "", "| 회차 | 문항 | 턴 | 응답(초) | 답한 모델 |", "|---|---|---|---|---|"]
+    lines += ["", f"## 5. {LIMIT_S}초 초과 요청", "", "| 회차 | 문항 | 턴 | 응답(초) | 구간 | 답한 모델 |",
+              "|---|---|---|---|---|---|"]
     slow = [(k + 1, r, t + 1, s) for k, run in enumerate(runs) for r in run["results"]
             for t, s in enumerate(r["latencies"]) if s > LIMIT_S]
-    lines += [f"| {k} | {r['id']} | {t} | {s} | {r['model']} |" for k, r, t, s in slow] or ["| - | 없음 | | | |"]
+    lines += [f"| {k} | {r['id']} | {t} | {s} | {_timing_brief((r.get('timings') or [None] * t)[t - 1])} | {r['model']} |"
+              for k, r, t, s in slow] or ["| - | 없음 | | | | |"]
+    lines += timing_section(runs)
     lines += ["", "## 6. 실패 원인 분석", "", "(작성 예정)", ""]
     return "\n".join(lines)
 
@@ -514,12 +616,14 @@ def main() -> None:
     parser.add_argument("--report", default="", help="리포트 Markdown 경로(숫자 부분 자동 생성)")
     parser.add_argument("--judge", action="store_true", help="모든 문항의 답변을 LLM-as-Judge로 채점")
     parser.add_argument("--rejudge", default="", help="저장된 결과 JSON으로 다시 채점(--report의 리포트에 절 추가)")
+    parser.add_argument("--compare", default="", help="이전 라운드 결과 JSON(리포트에 비교 절 추가)")
     args = parser.parse_args()
     if args.rejudge:
         rejudge(args.rejudge, args.report or args.rejudge.replace("_results.json", "_report.md"))
         return
     cases = load_cases([i.strip() for i in args.ids.split(",") if i.strip()])
-    info = {**run_info(args), "out": args.out}
+    info = {**run_info(args), "out": args.out, "compare": args.compare}
+    prev = json.loads(Path(args.compare).read_text(encoding="utf-8")) if args.compare else None
     runs = []
     for n in range(args.runs):
         print(f"\n## {n + 1}회차 ({len(cases)}문항)", flush=True)
@@ -547,7 +651,7 @@ def main() -> None:
         print_ragas([r["ragas"] or {"mean": {}, "per_case": {}} for r in runs])
     if args.report:
         title = f"{Path(args.report).stem.removesuffix('_report')} 평가 리포트"
-        Path(args.report).write_text(build_report(info, runs, title), encoding="utf-8")
+        Path(args.report).write_text(build_report(info, runs, title, prev), encoding="utf-8")
         print(f"\n리포트: {args.report}")
 
 

@@ -45,6 +45,7 @@ python -m venv .venv
 .venv/Scripts/python.exe evaluation/run_eval.py --ragas   # RAGAS 4개 지표 함께 계산(조회·브리핑, 소개 자료 RAG 문항)
 .venv/Scripts/python.exe evaluation/run_eval.py --runs 3 --ragas --judge --out evaluation/roundN_results.json --report evaluation/roundN_report.md   # 라운드 평가: 규칙 판정·RAGAS·LLM-as-Judge, 결과 JSON(실패 trace 포함)과 리포트 숫자 부분
 .venv/Scripts/python.exe evaluation/run_eval.py --rejudge evaluation/round1_results.json   # 저장된 답변으로 LLM-as-Judge만 다시 채점(재질의 없음)
+# 라운드 비교: 위 라운드 평가 명령에 --compare evaluation/round(N-1)_results.json을 붙이면 리포트에 "이전 라운드와 비교" 절이 생긴다
 ```
 질의 한 번(지금 단계):
 ```bash
