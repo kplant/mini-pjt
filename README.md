@@ -36,6 +36,12 @@ bash run.sh serve [포트]    # 서버(기본 8000, HOST=0.0.0.0으로 바인딩
 bash run.sh eval [인자...]   # 평가(evaluation/run_eval.py에 인자 그대로, 예: --runs 3 --ragas --judge)
 bash run.sh demo            # 시연 8단계(서버를 띄운 다른 창에서)
 ```
+Docker(Python 3.12 이미지, 자격 증명은 이미지에 넣지 않고 실행할 때 넘긴다):
+```bash
+docker build -t mini-pjt .
+docker run -p 8000:8000 --env-file .env mini-pjt   # 첫 소개 자료 검색 때 벡터DB를 만든다
+```
+Dockerfile은 Docker가 없는 개발 PC라 빌드·실행을 검증하지 못했다. 대신 저장소를 새로 clone해 README대로 설치하고 `run.sh serve`로 m-04·m-22가 200인 것을 확인했다(TASKS 6-4).
 설치와 개별 명령:
 ```bash
 python -m venv .venv

@@ -1,0 +1,8 @@
+# 비밀 값과 로컬에서 만든 데이터는 이미지에 넣지 않습니다.
+.env
+.venv/
+db/
+chroma_db/
+__pycache__/
+.git/
+plan/
