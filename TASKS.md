@@ -96,5 +96,5 @@
   - 확인: Git Bash에서 `bash run.sh serve`로 서버가 뜨고 curl m-04가 200
 - [x] 6-4 `Dockerfile`: 클린 환경 재현. AWS 자격 증명은 이미지에 넣지 않고 실행할 때 `--env-file .env`로 넘김. 개발 PC에 Docker가 없어 확인 방법 A(깨끗한 clone 재현)로 정함(사용자 결정, 2026-10-23)
   - 확인: 저장소를 새로 clone해 README대로 설치하고 `.env` 없이 환경 변수로만 넘겨 `bash run.sh serve` → curl m-04가 200. Dockerfile 빌드·실행은 미검증으로 README에 밝힘
-- [ ] 6-5 시연 리허설 5단계(브리핑 → 조율·프로필 → 승인 → 거절 2건)
+- [x] 6-5 시연 리허설 5단계(브리핑 → 조율·프로필 → 승인 → 거절 2건). 자동 리허설(`bash run.sh demo --no-pause`)로 확인, 녹화는 사용자가 추후 진행(2026-10-23)
   - 확인: 5단계를 끝까지 3분 안에 끝냄
