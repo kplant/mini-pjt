@@ -31,3 +31,6 @@ uvicorn
 
 # 평가 (Mini PJT)
 ragas==0.4.3
+
+# 관측 (Mini PJT, 선택: .env에 LANGFUSE 키가 있을 때만 켜짐)
+langfuse==5.0.4

@@ -350,13 +350,86 @@ class StepTimer(BaseCallbackHandler):
     on_tool_error = on_tool_end
 
 
+def _add_callback(callbacks, handler):
+    """콜백 목록이나 부모 실행에서 이어받은 콜백 관리자에 handler를 덧붙입니다."""
+    if callbacks is None:
+        return [handler]
+    if isinstance(callbacks, list):
+        return [*callbacks, handler]
+    manager = callbacks.copy()
+    manager.add_handler(handler, inherit=True)
+    return manager
+
+
+# ---------------------------------------------------------------------------
+# Langfuse trace (TASKS 7-1)
+# .env에 LANGFUSE_PUBLIC_KEY·LANGFUSE_SECRET_KEY가 있을 때만 켭니다. 없으면 지금과 똑같이 동작합니다.
+# Langfuse로 보내는 기록은 사람이 직접 보지 않는 기록이라 연락처를 가립니다(ADR 0004, mask_pii).
+# ---------------------------------------------------------------------------
+
+_LANGFUSE_ON: bool | None = None
+
+
+def _langfuse_mask(*, data: Any, **kwargs) -> Any:
+    """Langfuse로 보내기 전에 연락처를 가립니다. 모르는 형태는 글자로 바꿔 가립니다."""
+    if data is None or isinstance(data, (bool, int, float)):
+        return data
+    if isinstance(data, (str, dict, list)):
+        return _mask_value(data)
+    return mask_pii(str(data))
+
+
+def _langfuse_mask_spans(*, params):
+    """내보내기 직전에 모든 span의 문자열 속성을 한 번 더 가립니다.
+
+    LangGraph 노드 출력처럼 mask 함수를 거치지 않고 속성에 들어가는 값이 있어(7-1 검증에서 확인), 이 단계에서 막습니다.
+    """
+    from langfuse.types import MaskOtelSpansResult, OtelSpanPatch
+
+    patches = {}
+    for key, span in params.spans.items():
+        changed = {}
+        for name, value in span.attributes.items():
+            if isinstance(value, str):
+                masked = mask_pii(value)
+            elif isinstance(value, (list, tuple)) and value and all(isinstance(v, str) for v in value):
+                masked = tuple(mask_pii(v) for v in value)
+            else:
+                continue
+            if masked != value:
+                changed[name] = masked
+        if changed:
+            patches[key] = OtelSpanPatch(set_attributes=changed)
+    return MaskOtelSpansResult(span_patches=patches)
+
+
+def langfuse_handler():
+    """Langfuse 키가 있으면 LangChain 콜백 핸들러를, 없으면 None을 돌려줍니다. 클라이언트는 처음 한 번만 만듭니다."""
+    global _LANGFUSE_ON
+    if _LANGFUSE_ON is None:
+        from dotenv import load_dotenv
+
+        load_dotenv()
+        _LANGFUSE_ON = bool(os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"))
+        if _LANGFUSE_ON:
+            from langfuse import Langfuse
+
+            # 주소는 LANGFUSE_BASE_URL(또는 LANGFUSE_HOST)에서 읽습니다
+            Langfuse(mask=_langfuse_mask, mask_otel_spans=_langfuse_mask_spans)
+    if not _LANGFUSE_ON:
+        return None
+    from langfuse.langchain import CallbackHandler
+
+    return CallbackHandler()
+
+
 def _invoke(agent, question: str, config: dict | None = None, timer=None) -> list:
     """Agent를 실행하고 이번 턴의 메시지만 돌려줍니다. timer(StepTimer)를 주면 콜백으로 붙입니다.
 
     대화 기억이 있으면 결과에 이전 턴 메시지도 들어 있어, 마지막 사람 메시지부터 잘라 냅니다.
     """
     if timer is not None:
-        config = {**(config or {}), "callbacks": [timer]}
+        config = {**(config or {}), "callbacks": _add_callback((config or {}).get("callbacks"), timer)}
     result = agent.invoke({"messages": [{"role": "user", "content": question}]}, config=config)
     messages = result["messages"]
     last_human = max((i for i, m in enumerate(messages) if getattr(m, "type", "") == "human"), default=0)
@@ -414,7 +487,12 @@ def build_supervisor(ctx: Ctx, question: str, sink: list, llm=None, checkpointer
 
     def sub_agent_tool(tool_name: str, route: str, build, description: str):
         def run() -> str:
-            config = {"configurable": {"thread_id": f"{thread_key}:{route}"}} if thread_key else None
+            from langchain_core.runnables import ensure_config
+
+            # Supervisor 실행의 콜백(Langfuse 포함)을 이어받아 하위 Agent도 같은 trace 아래에 기록합니다.
+            config = {"callbacks": ensure_config().get("callbacks")}
+            if thread_key:
+                config["configurable"] = {"thread_id": f"{thread_key}:{route}"}
             started, timer = time.time(), StepTimer()
             messages = _invoke(build(ctx, llm, checkpointer), question, config, timer)
             calls = collect_tool_calls(messages, route)
@@ -632,11 +710,16 @@ def run_query(question: str, user_id: str = "sec-kim", base_date: date | str | N
         trace = [_step("auth", user_id, "등록되지 않은 사용자"), _step("decision", "요청자 확인", verdict)]
         return _result("등록되지 않은 사용자입니다. 요청을 처리할 수 없습니다.", [], trace)
     ctx = Ctx(requester, _to_date(base_date), Path(db_path))
-    checkpointer, config, thread_key = None, None, None
+    checkpointer, thread_key = None, None
+    config: dict = {"run_name": "run_query", "metadata": {"langfuse_user_id": user_id}}
     if thread_id:
         checkpointer = _checkpointer()
         thread_key = f"{user_id}:{thread_id}"
-        config = {"configurable": {"thread_id": thread_key}}
+        config["configurable"] = {"thread_id": thread_key}
+        config["metadata"]["langfuse_session_id"] = thread_key
+    handler = langfuse_handler()
+    if handler is not None:
+        config["callbacks"] = [handler]
     sink: list[dict] = []
     sup_timer = StepTimer()
     messages = _invoke(build_supervisor(ctx, question, sink, llm, checkpointer, thread_key), question, config, sup_timer)

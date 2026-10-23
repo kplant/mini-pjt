@@ -1,6 +1,6 @@
 # 계획: TASKS 7-1 Langfuse trace (self-host)
 
-## 상태: 보류 — 사용자가 Docker Desktop 설치 후 재개(2026-10-23)
+## 상태: 완료(2026-10-23, Docker Desktop 설치 후 재개)
 
 ## Context
 - 사용자 요청(2026-10-23): Langfuse 적용
@@ -34,3 +34,23 @@
 
 ## 다음 단계(7-1 이후 후보)
 - `run_eval.py`의 규칙 판정·RAGAS·LLM-as-Judge 점수를 Langfuse score로 업로드, 평가셋을 Langfuse dataset으로
+
+## 결과(2026-10-23)
+- Docker: 29.9.2(Linux 엔진, 메모리 8.3GB, CPU 12), Compose v5.6.1, hello-world 성공
+- 사용자 결정: compose 파일은 프로젝트 밖 `C:\Users\SDS\langfuse\`
+  - 공식 `docker-compose.yml`(Langfuse v4 이미지 + Postgres·ClickHouse·Redis·MinIO)은 그대로, `.env`(무작위 비밀번호 11개, CHANGEME 기본값 대체), `docker-compose.override.yml`(웹 3000·MinIO 9090/9091을 127.0.0.1로만, `!override`) → 모든 포트 127.0.0.1
+  - 컨테이너 6개 기동, `/api/public/health` 200
+- `langfuse==5.0.4` 설치(기존 패키지 버전 변화 없음), requirements.txt에 추가
+- `src/agent.py`
+  - `langfuse_handler()`: .env 키가 있을 때만 `Langfuse(mask=…, mask_otel_spans=…)`를 한 번 만들고 요청마다 `CallbackHandler` 반환. 없으면 None
+  - `run_query` config: `run_name=run_query`, metadata `langfuse_user_id`, thread가 있으면 `langfuse_session_id`, 콜백에 핸들러
+  - 하위 Agent: `ensure_config()`로 Supervisor 실행의 콜백을 이어받고 `_add_callback`으로 StepTimer를 덧붙임(전에는 callbacks를 새 목록으로 덮어써 부모 콜백이 끊겼음) → 같은 trace 아래 중첩
+  - 마스킹: `mask`(입출력 저장 전)만으로는 LangGraph 노드 출력 한 곳에 원래 연락처가 남음(검증에서 발견) → `mask_otel_spans`로 내보내기 직전 모든 문자열 속성을 `mask_pii`
+- 사용자가 키를 `.env`에 넣음(주소는 `LANGFUSE_BASE_URL=http://localhost:3000` — SDK가 읽는 이름, 외부 전송 없음 확인)
+- 검증
+  - 키 없음: handler None, check_tools.py 39개, m-07 두 턴 정상(timing 포함)
+  - 키 있음: m-04·m-07 두 턴·m-13 → trace 4개(m-07 두 턴은 session `sec-kim:lf-…`로 묶임). 트리: run_query → model(GENERATION ChatBedrockConverse) → tools → schedule_agent(TOOL) → LangGraph → model·tool_get_profile·model
+  - 마스킹 1차: m-13 trace에 원래 번호가 CHAIN model output에 남음 → mask_otel_spans 추가 후 재확인: 원래 번호·이메일 0건, 가린 형태만
+  - 응답 시간(m-04, 같은 프로세스, 예열 후 3회씩): 켬 평균 9.02초 / 끔 9.83초, 모델 호출 외 시간 0.09초 / 0.07초 → 부담 약 0.02초(전체 차이는 모델 호출 변동)
+- 남은 것: 마스킹 고치기 전 m-13 trace 1건(원래 연락처, 더미 데이터)이 로컬 Langfuse에 남아 있음 — 삭제는 사용자 확인 후
+- 다음 단계 후보: run_eval.py 점수(규칙 판정·RAGAS·LLM-as-Judge)를 Langfuse score로, 평가셋을 dataset으로

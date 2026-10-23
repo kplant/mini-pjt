@@ -28,6 +28,7 @@ POST /query (src/app.py)
 - 권한은 프롬프트가 아니라 도구 코드가 SQLite에서 읽은 뒤 걸러서 넘긴다. 권한 밖의 데이터는 도구 밖으로 나가지 않는다([ADR 0003](docs/adr/0003-supervisor-구조-권한은-도구-계층.md)).
 - trace는 route → 도구 호출(소개 자료 검색은 `retrieve`) → timing → decision 순서다. 평가 판정 값(route, refused, candidates, pending_approvals, model, latency_s)은 마지막 `decision` 단계에 담는다.
 - 구현 범위: 서버 → Supervisor → 조율·일정·관리 Agent와 평가 3라운드까지(TASKS 5까지).
+- 관측(선택, TASKS 7-1): `.env`에 `LANGFUSE_PUBLIC_KEY`·`LANGFUSE_SECRET_KEY`·`LANGFUSE_BASE_URL`이 있으면 요청마다 Langfuse에 trace(`run_query` → Supervisor → 하위 Agent → 모델·도구 호출)를 남긴다. 요청자는 user, `thread_id`는 session으로 묶이고, 연락처는 보내기 전에 가린다(ADR 0004). 키가 없으면 지금과 똑같이 동작한다. 로컬 Langfuse 서버는 공식 `docker-compose.yml`로 띄웠고(저장소 밖), 웹 화면은 `http://localhost:3000`이다.
 
 ## 실행 방법
 설치 뒤에는 `run.sh` 하나로 실행한다(Git Bash·macOS·Linux, `.venv`의 Python을 먼저 찾는다).

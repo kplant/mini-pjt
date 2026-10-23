@@ -100,6 +100,6 @@
   - 확인: 5단계를 끝까지 3분 안에 끝냄
 
 ## 7. 관측(선택, 제출 후)
-- [ ] 7-1 Langfuse trace(self-host): Docker로 Langfuse 서버를 띄우고, `.env`에 키가 있을 때만 `run_query`에 Langfuse 콜백을 붙여 Supervisor → 하위 Agent → 모델·도구 호출을 기록(연락처는 `mask_pii`로 가림). 점수 업로드는 다음 단계. 계획: `plan/task-7-1.md`
+- [x] 7-1 Langfuse trace(self-host): Docker로 Langfuse 서버를 띄우고, `.env`에 키가 있을 때만 `run_query`에 Langfuse 콜백을 붙여 Supervisor → 하위 Agent → 모델·도구 호출을 기록(연락처는 `mask_pii`로 가림). 점수 업로드는 다음 단계. 계획: `plan/task-7-1.md`
   - 선행(사용자): Docker Desktop 설치(`wsl --install` 후 재부팅, `docker run hello-world`로 확인)
   - 확인: m-04·m-07(두 턴)의 trace 트리가 Langfuse 화면에 보이고, 키를 지우면 지금과 똑같이 동작(`check_tools.py` 39개 PASS)
