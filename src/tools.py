@@ -272,15 +272,22 @@ def list_events(ctx: Ctx, executive: str, date_from: str, date_to: str | None = 
             )
             if _overlaps(_parse_dt(ev["start"]), _parse_dt(ev["end"]), start, end)
         ]
+        who = _label(person)
         items = [_event_view(conn, req, ev) for ev in rows]
-        busy = [{"date": i["date"], "start": i["start"], "end": i["end"]} for i in items]
-        label = _range_label(start, end)
+        for i in items:  # 바쁨 항목도 누구의 시간인지 남깁니다(조회 대상 임원은 요청자가 이미 아는 정보)
+            if i.get("status") == "바쁨":
+                i["executive"] = who
+        busy = [{"executive": who, "date": i["date"], "start": i["start"], "end": i["end"]} for i in items]
+        # today는 기준일입니다. 답변의 '내일'·'이번 주' 같은 말이 도구 결과에 근거하도록 넣습니다.
+        label, today = _range_label(start, end), _day(ctx.base_date.isoformat() + "T00:00")
         if not _can_act_for(req, person["id"]):
-            return _denied(f"{_label(person)}의 일정 내용은 담당 비서와 본인만 볼 수 있습니다. 바쁨만 안내합니다.",
-                           date_label=label, busy=busy)
+            return _denied(f"{who}의 일정 내용은 담당 비서와 본인만 볼 수 있습니다. 바쁨만 안내합니다.",
+                           today=today, date_label=label, busy=busy)
         if items and all(i.get("status") == "바쁨" for i in items):
-            return _denied("비공개 일정이라 내용은 볼 수 없습니다. 바쁨만 안내합니다.", date_label=label, busy=busy)
-        return {"executive": _label(person), "range": [_fmt(start), _fmt(end)], "date_label": label, "events": items}
+            return _denied("비공개 일정이라 내용은 볼 수 없습니다. 바쁨만 안내합니다.",
+                           today=today, date_label=label, busy=busy)
+        return {"executive": who, "today": today, "range": [_fmt(start), _fmt(end)], "date_label": label,
+                "events": items}
     finally:
         conn.close()
 

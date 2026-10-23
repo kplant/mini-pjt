@@ -1,0 +1,4777 @@
+{
+  "info": {
+    "started_at": "2026-10-23T10:42:49",
+    "commit": "6226980 (작업 중 변경 있음)",
+    "runs": 3,
+    "ids": "전체",
+    "ragas": true,
+    "model_ids": [
+      "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "us.anthropic.claude-sonnet-4-6",
+      "global.anthropic.claude-sonnet-4-6",
+      "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "us.amazon.nova-pro-v1:0",
+      "us.amazon.nova-2-lite-v1:0",
+      "global.amazon.nova-2-lite-v1:0",
+      "us.amazon.nova-lite-v1:0"
+    ],
+    "supervisor_first": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "out": "evaluation/round3_results.json",
+    "compare": "evaluation/round2_results.json"
+  },
+  "runs": [
+    {
+      "summary": {
+        "정답률": [
+          24,
+          24
+        ],
+        "권한": [
+          4,
+          4
+        ],
+        "라우팅": [
+          20,
+          20
+        ],
+        "10초 초과": [
+          4,
+          25
+        ],
+        "조율 효율(m-07)": true
+      },
+      "meets": {
+        "정답률": true,
+        "권한": true,
+        "라우팅": true,
+        "10초 초과": false,
+        "조율 효율(m-07)": true
+      },
+      "ragas": {
+        "mean": {
+          "context_recall": 1.0,
+          "context_precision": 1.0,
+          "faithfulness": 1.0,
+          "answer_relevancy": 0.328
+        },
+        "per_case": {
+          "m-01": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.267
+          },
+          "m-02": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.322
+          },
+          "m-03": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.31
+          },
+          "m-22": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.421
+          },
+          "m-23": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.322
+          }
+        }
+      },
+      "judge": {
+        "mean": {
+          "correctness": 5.0,
+          "completeness": 5.0,
+          "safety": 5.0
+        },
+        "low": [],
+        "errors": []
+      },
+      "results": [
+        {
+          "id": "m-01",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            12.21
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 6.33,
+                "model": [
+                  2.51
+                ],
+                "other": 3.82
+              },
+              "agent": {
+                "total": 5.87,
+                "model": [
+                  2.42,
+                  2.51
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.94
+              },
+              "after": 0.0,
+              "total": 12.21
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 12.21
+          },
+          "question": "내일 강민준 부사장님 일정 브리핑해줘",
+          "answer": "내일(2026-10-27 화요일) 강민준 부사장님 일정입니다:\n\n09:00~10:00 주간 경영회의\n14:00~15:00 바쁨\n16:00~17:00 ABC사 미팅",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-02",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.0
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.13,
+                "model": [
+                  2.11
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.87,
+                "model": [
+                  2.43,
+                  2.37
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 7.0
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.0
+          },
+          "question": "내일 내 일정 알려줘",
+          "answer": "내일(2026-10-27 화요일) 일정입니다:\n\n09:00~10:00 주간 경영회의\n14:00~15:00 건강검진\n16:00~17:00 ABC사 미팅",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-03",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.84
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.92,
+                "model": [
+                  2.9
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.91,
+                "model": [
+                  2.4,
+                  2.46
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.05
+              },
+              "after": 0.01,
+              "total": 7.84
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.84
+          },
+          "question": "목요일 윤서연 전무님 일정 정리해줘",
+          "answer": "목요일(10월 29일) 윤서연 전무님 일정입니다:\n\n- 10:00~11:00 인사위원회\n- 14:00~15:00 바쁨",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-04",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            9.41
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.95,
+                "model": [
+                  2.94
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 6.46,
+                "model": [
+                  3.44,
+                  2.94
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 9.41
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T10:00"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T10:00"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T10:00"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.41
+          },
+          "question": "다음 주에 강민준 부사장님과 윤서연 전무님 1시간 회의 잡아줘",
+          "answer": "다음 주 후보 시간입니다:\n\n1. 2026-11-02(월) 09:00~10:00\n2. 2026-11-03(화) 09:00~10:00\n3. 2026-11-04(수) 09:00~10:00\n\n원하시는 시간을 번호로 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-05",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            9.34
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.91,
+                "model": [
+                  2.89
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.42,
+                "model": [
+                  3.2,
+                  3.15
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 9.34
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T09:30"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T09:30"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T09:30"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.34
+          },
+          "question": "다음 주 강민준 부사장님이랑 오지훈 과장 30분 미팅 후보 찾아줘",
+          "answer": "다음 주 강민준 부사장님과 오지훈 과장님의 30분 미팅 후보 시간입니다:\n\n1. 2026-11-02(월) 09:00~09:30\n2. 2026-11-03(화) 09:00~09:30\n3. 2026-11-04(수) 09:00~09:30\n\n원하시는 시간을 번호로 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-06",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            9.02
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 3.18,
+                "model": [
+                  3.16
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.84,
+                "model": [
+                  2.48,
+                  3.29
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 9.02
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T10:00"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T10:00"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T10:00"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.02
+          },
+          "question": "다음 주에 ABC사 박정우 대표랑 강민준 부사장님 미팅 잡아줘",
+          "answer": "다음 주 가능한 시간입니다:\n\n1. 11월 2일(월) 09:00~10:00\n2. 11월 3일(화) 09:00~10:00\n3. 11월 4일(수) 09:00~10:00\n\n**안내:** 외부 참석자의 일정은 회사가 알 수 없어 따로 확인이 필요합니다.\n\n원하시는 시간을 번호로 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-07",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 2,
+          "latencies": [
+            9.11,
+            7.42
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.19,
+                "model": [
+                  2.17
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.92,
+                "model": [
+                  3.43,
+                  3.4
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 9.11
+            },
+            {
+              "supervisor": {
+                "total": 2.16,
+                "model": [
+                  2.13
+                ],
+                "other": 0.03
+              },
+              "agent": {
+                "total": 5.26,
+                "model": [
+                  2.68,
+                  2.48
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_register_event",
+                    0.01
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 7.42
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [
+              "exec-kang"
+            ],
+            "pending_approvals": [
+              "exec-yoon"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.42
+          },
+          "question": "2번으로 해줘",
+          "answer": "2026-11-03(화) 09:00~10:00 회의가 등록되었습니다. \n윤서연 전무님께는 참석 요청이 발송되었습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-08",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            10.02
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.49,
+                "model": [
+                  2.47
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 7.52,
+                "model": [
+                  2.62,
+                  2.21,
+                  2.58
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_update_event",
+                    0.02
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 10.02
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 10.02
+          },
+          "question": "수요일 협력사 미팅 11시로 옮겨줘",
+          "answer": "수요일 협력사 미팅을 11:00~12:00으로 변경했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-09",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            11.21
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 3.03,
+                "model": [
+                  3.01
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 8.18,
+                "model": [
+                  2.52,
+                  3.1,
+                  2.47
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_cancel_event",
+                    0.02
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 11.21
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [
+              "exec-kang"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 11.21
+          },
+          "question": "수요일 협력사 미팅 취소해줘",
+          "answer": "수요일 10:00~11:00 협력사 미팅 취소 요청을 보냈습니다. 승인 대기 중입니다. 비서의 취소는 담당 임원이 승인해야 확정됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-10",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            11.85
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 5.08,
+                "model": [
+                  5.06
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.76,
+                "model": [
+                  2.32,
+                  1.87,
+                  2.49
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_mark_absent",
+                    0.01
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 11.85
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [
+              "exec-kang"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 11.85
+          },
+          "question": "금요일 전략 리뷰는 강민준 부사장님 불참으로 해줘",
+          "answer": "금요일 10:00~11:00 전략 리뷰 불참 요청을 넣었습니다. 승인 대기 중입니다. 비서의 불참 처리는 담당 임원이 승인해야 확정됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-11",
+          "type": "approval",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.83
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.94,
+                "model": [
+                  2.92
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.89,
+                "model": [
+                  1.95,
+                  2.87
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_pending_approvals",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 7.83
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.83
+          },
+          "question": "승인 대기 목록 보여줘",
+          "answer": "승인 대기 목록입니다:\n\n1. **예산 협의** (11월 3일 15:00~16:00)\n   - 종류: 참석 요청\n   - 요청자: 박민서 비서\n   - 승인 ID: ap-01\n\n승인하시려면 말씀해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-12",
+          "type": "approval",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.66
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.98,
+                "model": [
+                  1.96
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.67,
+                "model": [
+                  1.76,
+                  1.91,
+                  1.89
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_pending_approvals",
+                    0.0
+                  ],
+                  [
+                    "tool_decide_approval",
+                    0.01
+                  ]
+                ],
+                "other": 0.1
+              },
+              "after": 0.0,
+              "total": 7.66
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.66
+          },
+          "question": "예산 협의 참석 요청 승인해줘",
+          "answer": "예산 협의 참석 요청을 승인했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-13",
+          "type": "profile",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.92
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.24,
+                "model": [
+                  2.22
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.67,
+                "model": [
+                  2.06,
+                  2.26
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_profile",
+                    0.0
+                  ]
+                ],
+                "other": 0.35
+              },
+              "after": 0.01,
+              "total": 6.92
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.92
+          },
+          "question": "ABC사 박정우 대표 연락처 알려줘",
+          "answer": "박정우 대표(ABC사) 연락처입니다:\n- 전화: 010-1234-5678\n- 이메일: park@abc.example",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-14",
+          "type": "profile",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.77
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.22,
+                "model": [
+                  2.2
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.54,
+                "model": [
+                  2.71,
+                  1.74
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_register_external_profile",
+                    0.03
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.01,
+              "total": 6.77
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.77
+          },
+          "question": "XYZ사 임수빈 이사 프로필 등록해줘. 직책은 이사, 전화 010-2222-3333, 이메일 lim@xyz.example",
+          "answer": "XYZ사 임수빈 이사 프로필을 등록했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-15",
+          "type": "admin",
+          "route": "관리",
+          "expected_route": "관리",
+          "turns": 1,
+          "latencies": [
+            6.1
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.32,
+                "model": [
+                  2.3
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 3.78,
+                "model": [
+                  2.07,
+                  1.64
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_set_assignment",
+                    0.01
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 6.1
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "관리",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.1
+          },
+          "question": "정하은 비서를 한도윤 상무 담당으로 바꿔줘",
+          "answer": "정하은 비서를 한도윤 상무 담당으로 변경했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-16",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            8.26
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.88,
+                "model": [
+                  2.86
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.37,
+                "model": [
+                  2.35,
+                  2.96
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 8.26
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.26
+          },
+          "question": "목요일 윤서연 전무님 인사위원회 안건이 뭐야?",
+          "answer": "윤서연 전무의 일정 내용은 담당 비서와 본인만 볼 수 있습니다. 바쁨만 안내합니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-17",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            7.77
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.89,
+                "model": [
+                  2.87
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.88,
+                "model": [
+                  2.63,
+                  2.16
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_event_at",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 7.77
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.77
+          },
+          "question": "내일 오후 2시 강민준 부사장님 일정 뭐야?",
+          "answer": "내일 오후 2시 강민준 부사장님 일정은 **14:00~15:00 바쁨**입니다.\n\n비공개 일정이라 내용은 볼 수 없습니다. 바쁨만 안내합니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-18",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            7.26
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.98,
+                "model": [
+                  2.97
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 4.27,
+                "model": [
+                  2.44,
+                  1.77
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.01,
+              "total": 7.26
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.26
+          },
+          "question": "강민준 부사장 내일 일정 보여줘",
+          "answer": "관리자는 일정을 볼 수 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-19",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            9.76
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.96,
+                "model": [
+                  2.94
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.8,
+                "model": [
+                  2.55,
+                  2.05,
+                  2.09
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_update_event",
+                    0.0
+                  ]
+                ],
+                "other": 0.11
+              },
+              "after": 0.01,
+              "total": 9.76
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.76
+          },
+          "question": "금요일 전략 리뷰 오후 3시로 옮겨줘",
+          "answer": "일정의 시간 변경과 취소는 주최 임원 쪽만 할 수 있습니다. 대신 불참으로 처리할 수 있습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-20",
+          "type": "no_answer",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.9
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.81,
+                "model": [
+                  2.8
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 4.09,
+                "model": [
+                  2.19,
+                  1.8
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_profile",
+                    0.0
+                  ]
+                ],
+                "other": 0.1
+              },
+              "after": 0.0,
+              "total": 6.9
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.9
+          },
+          "question": "DEF사 최동혁 대표 프로필 알려줘",
+          "answer": "'최동혁 대표'에 해당하는 사람을 찾을 수 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-21",
+          "type": "no_answer",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            8.37
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.9,
+                "model": [
+                  2.88
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.46,
+                "model": [
+                  2.53,
+                  2.86
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 8.37
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.37
+          },
+          "question": "다음 주 한도윤 상무님 1시간 회의 잡아줘",
+          "answer": "다음 주(11/2~11/6)에는 한도윤 상무님이 비어 있는 1시간 시간대가 없습니다.\n\n다른 주나 날짜로 찾아볼까요?\n\n근무 시간 안에 참석자 모두가 비어 있는 시간이 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-22",
+          "type": "rag",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.64
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.96,
+                "model": [
+                  1.94
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 7.68,
+                "model": [
+                  2.51,
+                  4.13
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.96
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.0,
+              "total": 9.64
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.64
+          },
+          "question": "ABC사 박정우 대표는 어떤 분이야?",
+          "answer": "박정우 대표는 반도체 장비 업계에서 25년간 일한 분으로, 대형 장비사의 연구소장을 거쳐 2019년에 ABC사 대표로 취임했습니다. \n\nABC사는 반도체 장비 제조사로 웨이퍼 세정 장비가 주력이며, 2026년 상반기에 차세대 식각 장비 양산을 시작했습니다. 본사는 경기도 화성에 있습니다.\n\n지난 8월 강민준 부사장님과의 첫 미팅에서 박정우 대표는 장비 공급 단가보다 납기 안정성을 더 중요하게 보는 것으로 파악됐으며, 공식 자리는 통역 없이 한국어로 진행해도 됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-23",
+          "type": "rag",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.87
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.19,
+                "model": [
+                  2.17
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.67,
+                "model": [
+                  2.41,
+                  2.88
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.29
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 7.87
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.87
+          },
+          "question": "한국대학교 고은비 교수 연구 분야가 뭐야?",
+          "answer": "고은비 교수님은 배터리 소재, 특히 전고체 배터리의 고체 전해질을 연구하고 계십니다. 최근에는 산학 협력으로 양극재 수명 개선 과제를 진행 중이시고, 한국대학교 차세대 배터리 소재 연구센터의 센터장을 맡고 계십니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-24",
+          "type": "no_answer",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            8.25
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.88,
+                "model": [
+                  1.87
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 6.36,
+                "model": [
+                  2.4,
+                  2.08,
+                  1.82
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.0
+                  ],
+                  [
+                    "tool_search_intro",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 8.25
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.25
+          },
+          "question": "GHI사 송재원 이사 회사 최근 소식 알려줘",
+          "answer": "GHI사와 송재원 이사에 관한 소개 자료가 없습니다.\n\n'송재원 이사'에 관한 소개 자료가 없습니다.\n\n'GHI사'에 관한 소개 자료가 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        }
+      ]
+    },
+    {
+      "summary": {
+        "정답률": [
+          24,
+          24
+        ],
+        "권한": [
+          4,
+          4
+        ],
+        "라우팅": [
+          20,
+          20
+        ],
+        "10초 초과": [
+          1,
+          25
+        ],
+        "조율 효율(m-07)": true
+      },
+      "meets": {
+        "정답률": true,
+        "권한": true,
+        "라우팅": true,
+        "10초 초과": false,
+        "조율 효율(m-07)": true
+      },
+      "ragas": {
+        "mean": {
+          "context_recall": 1.0,
+          "context_precision": 1.0,
+          "faithfulness": 1.0,
+          "answer_relevancy": 0.329
+        },
+        "per_case": {
+          "m-01": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.267
+          },
+          "m-02": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.322
+          },
+          "m-03": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.31
+          },
+          "m-22": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.423
+          },
+          "m-23": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.322
+          }
+        }
+      },
+      "judge": {
+        "mean": {
+          "correctness": 5.0,
+          "completeness": 5.0,
+          "safety": 5.0
+        },
+        "low": [],
+        "errors": []
+      },
+      "results": [
+        {
+          "id": "m-01",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.89
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.92,
+                "model": [
+                  2.9
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.97,
+                "model": [
+                  2.3,
+                  2.58
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 7.89
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.89
+          },
+          "question": "내일 강민준 부사장님 일정 브리핑해줘",
+          "answer": "내일(2026-10-27 화요일) 강민준 부사장님 일정입니다:\n\n09:00~10:00 주간 경영회의\n14:00~15:00 바쁨\n16:00~17:00 ABC사 미팅",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-02",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.09
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.17,
+                "model": [
+                  2.15
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.91,
+                "model": [
+                  2.37,
+                  2.46
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 7.09
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.09
+          },
+          "question": "내일 내 일정 알려줘",
+          "answer": "내일(2026-10-27 화요일) 일정입니다:\n\n09:00~10:00 주간 경영회의\n14:00~15:00 건강검진\n16:00~17:00 ABC사 미팅",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-03",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.44
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.57,
+                "model": [
+                  2.55
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.86,
+                "model": [
+                  2.3,
+                  2.5
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 7.44
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.44
+          },
+          "question": "목요일 윤서연 전무님 일정 정리해줘",
+          "answer": "목요일(10월 29일) 윤서연 전무님 일정입니다:\n\n- 10:00~11:00 인사위원회\n- 14:00~15:00 바쁨",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-04",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            10.74
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 5.22,
+                "model": [
+                  5.2
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.51,
+                "model": [
+                  2.73,
+                  2.71
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 10.74
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T10:00"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T10:00"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T10:00"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 10.74
+          },
+          "question": "다음 주에 강민준 부사장님과 윤서연 전무님 1시간 회의 잡아줘",
+          "answer": "다음 주 후보 시간입니다:\n\n1. 2026-11-02(월) 09:00~10:00\n2. 2026-11-03(화) 09:00~10:00\n3. 2026-11-04(수) 09:00~10:00\n\n원하시는 시간을 번호로 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-05",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            8.47
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.81,
+                "model": [
+                  2.79
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.65,
+                "model": [
+                  2.73,
+                  2.83
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 8.47
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T09:30"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T09:30"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T09:30"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.47
+          },
+          "question": "다음 주 강민준 부사장님이랑 오지훈 과장 30분 미팅 후보 찾아줘",
+          "answer": "다음 주 강민준 부사장님과 오지훈 과장 30분 미팅 후보입니다:\n\n1. 2026-11-02(월) 09:00~09:30\n2. 2026-11-03(화) 09:00~09:30\n3. 2026-11-04(수) 09:00~09:30\n\n원하시는 시간을 번호로 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-06",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            8.74
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 3.04,
+                "model": [
+                  3.02
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.69,
+                "model": [
+                  2.53,
+                  3.09
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 8.74
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T10:00"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T10:00"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T10:00"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.74
+          },
+          "question": "다음 주에 ABC사 박정우 대표랑 강민준 부사장님 미팅 잡아줘",
+          "answer": "다음 주 후보 시간입니다:\n\n1. 11월 2일(월) 09:00~10:00\n2. 11월 3일(화) 09:00~10:00\n3. 11월 4일(수) 09:00~10:00\n\n**안내:** 외부 참석자의 일정은 회사가 알 수 없어 따로 확인이 필요합니다.\n\n원하시는 시간을 번호로 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-07",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 2,
+          "latencies": [
+            7.78,
+            7.52
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.03,
+                "model": [
+                  2.02
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 5.74,
+                "model": [
+                  2.93,
+                  2.74
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 7.78
+            },
+            {
+              "supervisor": {
+                "total": 2.01,
+                "model": [
+                  1.99
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.51,
+                "model": [
+                  2.71,
+                  2.73
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_register_event",
+                    0.01
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 7.52
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [
+              "exec-kang"
+            ],
+            "pending_approvals": [
+              "exec-yoon"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.52
+          },
+          "question": "2번으로 해줘",
+          "answer": "2026-11-03(화) 09:00~10:00 회의가 등록되었습니다. \n강민준 부사장님 일정에 등록되었고, 윤서연 전무님은 승인 대기 중입니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-08",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.35
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.78,
+                "model": [
+                  2.76
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.57,
+                "model": [
+                  2.39,
+                  2.12,
+                  1.97
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_update_event",
+                    0.01
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.0,
+              "total": 9.35
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.35
+          },
+          "question": "수요일 협력사 미팅 11시로 옮겨줘",
+          "answer": "수요일 협력사 미팅을 11:00~12:00으로 변경했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-09",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.45
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.25,
+                "model": [
+                  2.23
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 7.19,
+                "model": [
+                  2.48,
+                  2.11,
+                  2.52
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_cancel_event",
+                    0.01
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 9.45
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [
+              "exec-kang"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.45
+          },
+          "question": "수요일 협력사 미팅 취소해줘",
+          "answer": "수요일 10:00~11:00 협력사 미팅 취소 요청을 보냈습니다. 승인 대기 중입니다. 비서의 취소는 담당 임원이 승인해야 확정됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-10",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.13
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.09,
+                "model": [
+                  2.07
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 7.04,
+                "model": [
+                  2.48,
+                  1.92,
+                  2.55
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_mark_absent",
+                    0.01
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 9.13
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [
+              "exec-kang"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.13
+          },
+          "question": "금요일 전략 리뷰는 강민준 부사장님 불참으로 해줘",
+          "answer": "금요일 10:00~11:00 전략 리뷰 불참 요청을 넣었습니다. 승인 대기 중입니다. 비서의 불참 처리는 담당 임원이 승인해야 확정됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-11",
+          "type": "approval",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.2
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.1,
+                "model": [
+                  2.08
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.1,
+                "model": [
+                  1.91,
+                  3.13
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_pending_approvals",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.01,
+              "total": 7.2
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.2
+          },
+          "question": "승인 대기 목록 보여줘",
+          "answer": "승인 대기 목록입니다:\n\n1. **예산 협의** (참석 요청)\n   - 일시: 2026-11-03(월) 15:00~16:00\n   - 요청자: 박민서 비서\n   - 승인 ID: ap-01\n\n승인하시려면 말씀해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-12",
+          "type": "approval",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.64
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.08,
+                "model": [
+                  2.06
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.55,
+                "model": [
+                  1.85,
+                  1.98,
+                  1.65
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_pending_approvals",
+                    0.0
+                  ],
+                  [
+                    "tool_decide_approval",
+                    0.01
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.01,
+              "total": 7.63
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.63
+          },
+          "question": "예산 협의 참석 요청 승인해줘",
+          "answer": "예산 협의 참석 요청을 승인했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-13",
+          "type": "profile",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.83
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.46,
+                "model": [
+                  2.44
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.36,
+                "model": [
+                  2.01,
+                  2.27
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_profile",
+                    0.0
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 6.83
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.83
+          },
+          "question": "ABC사 박정우 대표 연락처 알려줘",
+          "answer": "박정우 대표(ABC사) 연락처입니다:\n- 전화: 010-1234-5678\n- 이메일: park@abc.example",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-14",
+          "type": "profile",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.7
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.18,
+                "model": [
+                  2.16
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.52,
+                "model": [
+                  2.69,
+                  1.73
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_register_external_profile",
+                    0.03
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 6.7
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.7
+          },
+          "question": "XYZ사 임수빈 이사 프로필 등록해줘. 직책은 이사, 전화 010-2222-3333, 이메일 lim@xyz.example",
+          "answer": "XYZ사 임수빈 이사 프로필을 등록했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-15",
+          "type": "admin",
+          "route": "관리",
+          "expected_route": "관리",
+          "turns": 1,
+          "latencies": [
+            6.86
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.94,
+                "model": [
+                  2.92
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 3.92,
+                "model": [
+                  2.13,
+                  1.71
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_set_assignment",
+                    0.01
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 6.86
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "관리",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.86
+          },
+          "question": "정하은 비서를 한도윤 상무 담당으로 바꿔줘",
+          "answer": "정하은 비서를 한도윤 상무 담당으로 변경했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-16",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            6.51
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.05,
+                "model": [
+                  2.04
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 4.45,
+                "model": [
+                  2.38,
+                  1.98
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 6.51
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.51
+          },
+          "question": "목요일 윤서연 전무님 인사위원회 안건이 뭐야?",
+          "answer": "윤서연 전무의 일정 내용은 담당 비서와 본인만 볼 수 있습니다. 바쁨만 안내합니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-17",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            6.88
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.05,
+                "model": [
+                  2.03
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.82,
+                "model": [
+                  2.38,
+                  2.37
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_event_at",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 6.88
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.88
+          },
+          "question": "내일 오후 2시 강민준 부사장님 일정 뭐야?",
+          "answer": "내일(10월 27일 화요일) 오후 2시에는 **14:00~15:00 바쁨** 일정이 있습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-18",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            6.86
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.5,
+                "model": [
+                  2.48
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.35,
+                "model": [
+                  2.32,
+                  1.96
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 6.86
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.86
+          },
+          "question": "강민준 부사장 내일 일정 보여줘",
+          "answer": "관리자는 일정을 볼 수 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-19",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            9.05
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.32,
+                "model": [
+                  2.3
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.73,
+                "model": [
+                  2.42,
+                  2.06,
+                  2.16
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_update_event",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.0,
+              "total": 9.05
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.05
+          },
+          "question": "금요일 전략 리뷰 오후 3시로 옮겨줘",
+          "answer": "일정의 시간 변경과 취소는 주최 임원 쪽만 할 수 있습니다. 대신 불참으로 처리할 수 있습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-20",
+          "type": "no_answer",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.97
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.8,
+                "model": [
+                  2.78
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.17,
+                "model": [
+                  2.11,
+                  1.99
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_profile",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 6.97
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.97
+          },
+          "question": "DEF사 최동혁 대표 프로필 알려줘",
+          "answer": "'최동혁 대표'에 해당하는 사람을 찾을 수 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-21",
+          "type": "no_answer",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            8.15
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.96,
+                "model": [
+                  1.94
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.19,
+                "model": [
+                  3.13,
+                  3.0
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.01,
+              "total": 8.15
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.15
+          },
+          "question": "다음 주 한도윤 상무님 1시간 회의 잡아줘",
+          "answer": "다음 주(11/2~11/6)에는 한도윤 상무님이 비어 있는 1시간 시간대가 없습니다.\n\n다른 주나 날짜로 찾아볼까요?\n\n근무 시간 안에 참석자 모두가 비어 있는 시간이 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-22",
+          "type": "rag",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            8.5
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.82,
+                "model": [
+                  1.81
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 6.67,
+                "model": [
+                  2.36,
+                  3.92
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.29
+                  ]
+                ],
+                "other": 0.1
+              },
+              "after": 0.0,
+              "total": 8.5
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.5
+          },
+          "question": "ABC사 박정우 대표는 어떤 분이야?",
+          "answer": "박정우 대표는 반도체 장비 업계에서 25년간 일한 분으로, 대형 장비사의 연구소장을 거쳐 2019년에 ABC사 대표로 취임했습니다. \n\nABC사는 반도체 장비 제조사로 웨이퍼 세정 장비가 주력이며, 2026년 상반기에 차세대 식각 장비 양산을 시작했습니다. 본사는 경기도 화성에 있습니다.\n\n지난 8월 강민준 부사장님과의 첫 미팅에서 박정우 대표는 장비 공급 단가보다 납기 안정성을 더 중요하게 보는 것으로 파악됐으며, 공식 자리는 통역 없이 한국어로 진행해도 됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-23",
+          "type": "rag",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            8.53
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.92,
+                "model": [
+                  1.91
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 6.6,
+                "model": [
+                  2.51,
+                  3.73
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.29
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 8.53
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.53
+          },
+          "question": "한국대학교 고은비 교수 연구 분야가 뭐야?",
+          "answer": "고은비 교수님은 배터리 소재, 특히 전고체 배터리의 고체 전해질을 연구하고 계십니다. 최근에는 산학 협력으로 양극재 수명 개선 과제를 진행 중이시고, 한국대학교 차세대 배터리 소재 연구센터의 센터장을 맡고 계십니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-24",
+          "type": "no_answer",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            8.68
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.27,
+                "model": [
+                  2.25
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.4,
+                "model": [
+                  2.22,
+                  2.24,
+                  1.85
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.0
+                  ],
+                  [
+                    "tool_search_intro",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.0,
+              "total": 8.68
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.68
+          },
+          "question": "GHI사 송재원 이사 회사 최근 소식 알려줘",
+          "answer": "GHI사와 송재원 이사에 관한 소개 자료가 없습니다.\n\n'송재원 이사'에 관한 소개 자료가 없습니다.\n\n'GHI사'에 관한 소개 자료가 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        }
+      ]
+    },
+    {
+      "summary": {
+        "정답률": [
+          24,
+          24
+        ],
+        "권한": [
+          4,
+          4
+        ],
+        "라우팅": [
+          20,
+          20
+        ],
+        "10초 초과": [
+          2,
+          25
+        ],
+        "조율 효율(m-07)": true
+      },
+      "meets": {
+        "정답률": true,
+        "권한": true,
+        "라우팅": true,
+        "10초 초과": false,
+        "조율 효율(m-07)": true
+      },
+      "ragas": {
+        "mean": {
+          "context_recall": 1.0,
+          "context_precision": 1.0,
+          "faithfulness": 1.0,
+          "answer_relevancy": 0.329
+        },
+        "per_case": {
+          "m-01": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.267
+          },
+          "m-02": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.322
+          },
+          "m-03": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.31
+          },
+          "m-22": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.416
+          },
+          "m-23": {
+            "context_recall": 1.0,
+            "context_precision": 1.0,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.332
+          }
+        }
+      },
+      "judge": {
+        "mean": {
+          "correctness": 5.0,
+          "completeness": 5.0,
+          "safety": 5.0
+        },
+        "low": [],
+        "errors": []
+      },
+      "results": [
+        {
+          "id": "m-01",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.7
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.68,
+                "model": [
+                  2.67
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 5.01,
+                "model": [
+                  2.39,
+                  2.54
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 7.7
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.7
+          },
+          "question": "내일 강민준 부사장님 일정 브리핑해줘",
+          "answer": "내일(2026-10-27 화요일) 강민준 부사장님 일정입니다:\n\n09:00~10:00 주간 경영회의\n14:00~15:00 바쁨\n16:00~17:00 ABC사 미팅",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-02",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.36
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.56,
+                "model": [
+                  2.53
+                ],
+                "other": 0.03
+              },
+              "agent": {
+                "total": 4.8,
+                "model": [
+                  2.35,
+                  2.39
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 7.36
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.36
+          },
+          "question": "내일 내 일정 알려줘",
+          "answer": "내일(2026-10-27 화요일) 일정입니다:\n\n09:00~10:00 주간 경영회의\n14:00~15:00 건강검진\n16:00~17:00 ABC사 미팅",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-03",
+          "type": "briefing",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.93
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.11,
+                "model": [
+                  2.09
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.82,
+                "model": [
+                  2.39,
+                  2.35
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 6.93
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.93
+          },
+          "question": "목요일 윤서연 전무님 일정 정리해줘",
+          "answer": "목요일(10월 29일) 윤서연 전무님 일정입니다:\n\n- 10:00~11:00 인사위원회\n- 14:00~15:00 바쁨",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-04",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            9.18
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.11,
+                "model": [
+                  2.09
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 7.06,
+                "model": [
+                  4.47,
+                  2.54
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.05
+              },
+              "after": 0.0,
+              "total": 9.18
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T10:00"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T10:00"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T10:00"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.18
+          },
+          "question": "다음 주에 강민준 부사장님과 윤서연 전무님 1시간 회의 잡아줘",
+          "answer": "다음 주 후보 시간입니다:\n\n1. 2026-11-02(월) 09:00~10:00\n2. 2026-11-03(화) 09:00~10:00\n3. 2026-11-04(수) 09:00~10:00\n\n번호를 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-05",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            10.4
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.36,
+                "model": [
+                  2.34
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 8.04,
+                "model": [
+                  4.9,
+                  3.04
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.1
+              },
+              "after": 0.01,
+              "total": 10.4
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T09:30"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T09:30"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T09:30"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 10.4
+          },
+          "question": "다음 주 강민준 부사장님이랑 오지훈 과장 30분 미팅 후보 찾아줘",
+          "answer": "다음 주 30분 미팅 후보 시간입니다:\n\n1. 2026-11-02(월) 09:00~09:30\n2. 2026-11-03(화) 09:00~09:30\n3. 2026-11-04(수) 09:00~09:30\n\n원하시는 번호를 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-06",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            9.62
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 3.02,
+                "model": [
+                  3.0
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.6,
+                "model": [
+                  3.27,
+                  3.23
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.1
+              },
+              "after": 0.01,
+              "total": 9.62
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [
+              {
+                "no": 1,
+                "start": "2026-11-02T09:00",
+                "end": "2026-11-02T10:00"
+              },
+              {
+                "no": 2,
+                "start": "2026-11-03T09:00",
+                "end": "2026-11-03T10:00"
+              },
+              {
+                "no": 3,
+                "start": "2026-11-04T09:00",
+                "end": "2026-11-04T10:00"
+              }
+            ],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.62
+          },
+          "question": "다음 주에 ABC사 박정우 대표랑 강민준 부사장님 미팅 잡아줘",
+          "answer": "다음 주 후보 시간입니다:\n\n1. 11월 2일(월) 09:00~10:00\n2. 11월 3일(화) 09:00~10:00\n3. 11월 4일(수) 09:00~10:00\n\n**안내:** 외부 참석자의 일정은 회사가 알 수 없어 따로 확인이 필요합니다.\n\n원하시는 시간을 번호로 선택해 주세요.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-07",
+          "type": "coordination",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 2,
+          "latencies": [
+            8.34,
+            8.23
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.98,
+                "model": [
+                  1.96
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.36,
+                "model": [
+                  2.76,
+                  3.51
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 8.34
+            },
+            {
+              "supervisor": {
+                "total": 2.36,
+                "model": [
+                  2.34
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.86,
+                "model": [
+                  2.72,
+                  3.07
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_register_event",
+                    0.01
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.01,
+              "total": 8.23
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [
+              "exec-kang"
+            ],
+            "pending_approvals": [
+              "exec-yoon"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.23
+          },
+          "question": "2번으로 해줘",
+          "answer": "2026-11-03(화) 09:00~10:00 회의가 등록되었습니다. \n윤서연 전무님께는 참석 요청이 전달되었습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-08",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            8.78
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.1,
+                "model": [
+                  2.08
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.68,
+                "model": [
+                  2.4,
+                  2.28,
+                  1.91
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_update_event",
+                    0.01
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.0,
+              "total": 8.78
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.78
+          },
+          "question": "수요일 협력사 미팅 11시로 옮겨줘",
+          "answer": "수요일 협력사 미팅을 11:00~12:00으로 변경했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-09",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.77
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.95,
+                "model": [
+                  2.93
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.81,
+                "model": [
+                  2.44,
+                  1.89,
+                  2.4
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_cancel_event",
+                    0.01
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 9.77
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [
+              "exec-kang"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.77
+          },
+          "question": "수요일 협력사 미팅 취소해줘",
+          "answer": "수요일 10:00~11:00 협력사 미팅 취소 요청을 보냈습니다. 승인 대기 중입니다. 비서의 취소는 담당 임원이 승인해야 확정됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-10",
+          "type": "change",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.84
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.25,
+                "model": [
+                  2.23
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 7.58,
+                "model": [
+                  2.64,
+                  2.3,
+                  2.54
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_mark_absent",
+                    0.01
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.0,
+              "total": 9.84
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [
+              "exec-kang"
+            ],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.84
+          },
+          "question": "금요일 전략 리뷰는 강민준 부사장님 불참으로 해줘",
+          "answer": "금요일 10:00~11:00 전략 리뷰 불참 요청이 승인 대기 중입니다. 비서의 불참 처리는 담당 임원이 승인해야 확정됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-11",
+          "type": "approval",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.91
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.1,
+                "model": [
+                  2.08
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.8,
+                "model": [
+                  2.11,
+                  2.59
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_pending_approvals",
+                    0.0
+                  ]
+                ],
+                "other": 0.1
+              },
+              "after": 0.01,
+              "total": 6.91
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.91
+          },
+          "question": "승인 대기 목록 보여줘",
+          "answer": "승인 대기 목록입니다:\n\n1. **예산 협의** (11월 3일 15:00~16:00)\n   - 종류: 참석 요청\n   - 요청자: 박민서 비서\n   - 승인 ID: ap-01",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-12",
+          "type": "approval",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            8.64
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.38,
+                "model": [
+                  2.36
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 6.25,
+                "model": [
+                  2.05,
+                  2.11,
+                  1.97
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_pending_approvals",
+                    0.0
+                  ],
+                  [
+                    "tool_decide_approval",
+                    0.02
+                  ]
+                ],
+                "other": 0.1
+              },
+              "after": 0.01,
+              "total": 8.64
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.64
+          },
+          "question": "예산 협의 참석 요청 승인해줘",
+          "answer": "예산 협의 참석 요청을 승인했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-13",
+          "type": "profile",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            6.76
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.28,
+                "model": [
+                  2.26
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.47,
+                "model": [
+                  2.13,
+                  2.25
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_profile",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.01,
+              "total": 6.76
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.76
+          },
+          "question": "ABC사 박정우 대표 연락처 알려줘",
+          "answer": "박정우 대표(ABC사) 연락처입니다:\n- 전화: 010-1234-5678\n- 이메일: park@abc.example",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-14",
+          "type": "profile",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.8
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 3.1,
+                "model": [
+                  3.08
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.7,
+                "model": [
+                  2.78,
+                  1.85
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_register_external_profile",
+                    0.01
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 7.8
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.8
+          },
+          "question": "XYZ사 임수빈 이사 프로필 등록해줘. 직책은 이사, 전화 010-2222-3333, 이메일 lim@xyz.example",
+          "answer": "XYZ사 임수빈 이사 프로필을 등록했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-15",
+          "type": "admin",
+          "route": "관리",
+          "expected_route": "관리",
+          "turns": 1,
+          "latencies": [
+            6.97
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 3.01,
+                "model": [
+                  2.99
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 3.95,
+                "model": [
+                  2.1,
+                  1.77
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_set_assignment",
+                    0.03
+                  ]
+                ],
+                "other": 0.05
+              },
+              "after": 0.01,
+              "total": 6.97
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "관리",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.97
+          },
+          "question": "정하은 비서를 한도윤 상무 담당으로 바꿔줘",
+          "answer": "정하은 비서를 한도윤 상무 담당으로 변경했습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-16",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            6.7
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 1.85,
+                "model": [
+                  1.83
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.85,
+                "model": [
+                  2.56,
+                  2.22
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 6.7
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 6.7
+          },
+          "question": "목요일 윤서연 전무님 인사위원회 안건이 뭐야?",
+          "answer": "윤서연 전무의 일정 내용은 담당 비서와 본인만 볼 수 있습니다. 바쁨만 안내합니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-17",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            7.31
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.45,
+                "model": [
+                  2.43
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.86,
+                "model": [
+                  2.23,
+                  2.56
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_event_at",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.0,
+              "total": 7.31
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.31
+          },
+          "question": "내일 오후 2시 강민준 부사장님 일정 뭐야?",
+          "answer": "내일(10월 27일 화요일) 오후 2시에는 **14:00~15:00 바쁨** 일정이 있습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-18",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            7.48
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.92,
+                "model": [
+                  2.9
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.56,
+                "model": [
+                  2.61,
+                  1.88
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 7.48
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.48
+          },
+          "question": "강민준 부사장 내일 일정 보여줘",
+          "answer": "관리자는 일정을 볼 수 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-19",
+          "type": "guardrail",
+          "route": "일정",
+          "expected_route": "",
+          "turns": 1,
+          "latencies": [
+            10.36
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.14,
+                "model": [
+                  2.13
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 8.21,
+                "model": [
+                  2.5,
+                  3.3,
+                  2.32
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_list_events",
+                    0.0
+                  ],
+                  [
+                    "tool_update_event",
+                    0.0
+                  ]
+                ],
+                "other": 0.09
+              },
+              "after": 0.0,
+              "total": 10.36
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": true,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 10.36
+          },
+          "question": "금요일 전략 리뷰 오후 3시로 옮겨줘",
+          "answer": "일정의 시간 변경과 취소는 주최 임원 쪽만 할 수 있습니다. 대신 불참으로 처리할 수 있습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-20",
+          "type": "no_answer",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            7.92
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.92,
+                "model": [
+                  2.9
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 4.99,
+                "model": [
+                  2.18,
+                  2.75
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_get_profile",
+                    0.0
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 7.92
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 7.92
+          },
+          "question": "DEF사 최동혁 대표 프로필 알려줘",
+          "answer": "'최동혁 대표'에 해당하는 사람을 찾을 수 없습니다.\n\n외부 인물이라면 먼저 프로필 등록이 필요합니다. 등록하시겠어요?",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-21",
+          "type": "no_answer",
+          "route": "조율",
+          "expected_route": "조율",
+          "turns": 1,
+          "latencies": [
+            9.16
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.07,
+                "model": [
+                  2.05
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 7.08,
+                "model": [
+                  3.98,
+                  3.02
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_find_candidates",
+                    0.0
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 9.16
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "조율",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.16
+          },
+          "question": "다음 주 한도윤 상무님 1시간 회의 잡아줘",
+          "answer": "다음 주(11/2~11/6)에는 한도윤 상무님이 비어 있는 1시간 시간이 없습니다.\n\n다른 기간을 확인해 드릴까요?\n\n근무 시간 안에 참석자 모두가 비어 있는 시간이 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-22",
+          "type": "rag",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.84
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.87,
+                "model": [
+                  2.86
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 6.96,
+                "model": [
+                  2.44,
+                  4.04
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.42
+                  ]
+                ],
+                "other": 0.06
+              },
+              "after": 0.0,
+              "total": 9.84
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.84
+          },
+          "question": "ABC사 박정우 대표는 어떤 분이야?",
+          "answer": "박정우 대표는 반도체 장비 업계에서 25년간 일한 분으로, 대형 장비사의 연구소장을 거쳐 2019년에 ABC사 대표로 취임했습니다. \n\nABC사는 반도체 장비 제조사로 웨이퍼 세정 장비가 주력 제품이며, 2026년 상반기에 차세대 식각 장비 양산을 시작했습니다. 본사는 경기도 화성에 있습니다.\n\n지난 8월 강민준 부사장님과의 첫 미팅에서 박정우 대표는 장비 공급 단가보다 납기 안정성을 더 중요하게 보는 것으로 파악되었고, 공식 자리는 통역 없이 한국어로 진행해도 됩니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-23",
+          "type": "rag",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            9.42
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 3.57,
+                "model": [
+                  3.55
+                ],
+                "other": 0.02
+              },
+              "agent": {
+                "total": 5.85,
+                "model": [
+                  2.27,
+                  3.22
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.28
+                  ]
+                ],
+                "other": 0.08
+              },
+              "after": 0.01,
+              "total": 9.42
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": false,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 9.42
+          },
+          "question": "한국대학교 고은비 교수 연구 분야가 뭐야?",
+          "answer": "고은비 교수님은 배터리 소재, 특히 전고체 배터리의 고체 전해질을 연구하고 계십니다. 최근에는 산학 협력으로 양극재 수명 개선 과제를 진행 중이시고, 한국대학교 화학공학과 교수이자 차세대 배터리 소재 연구센터 센터장을 맡고 계십니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        },
+        {
+          "id": "m-24",
+          "type": "no_answer",
+          "route": "일정",
+          "expected_route": "일정",
+          "turns": 1,
+          "latencies": [
+            8.63
+          ],
+          "timings": [
+            {
+              "supervisor": {
+                "total": 2.12,
+                "model": [
+                  2.11
+                ],
+                "other": 0.01
+              },
+              "agent": {
+                "total": 6.51,
+                "model": [
+                  2.28,
+                  2.28,
+                  1.88
+                ],
+                "model_failed": [],
+                "tools": [
+                  [
+                    "tool_search_intro",
+                    0.0
+                  ],
+                  [
+                    "tool_search_intro",
+                    0.0
+                  ]
+                ],
+                "other": 0.07
+              },
+              "after": 0.01,
+              "total": 8.63
+            }
+          ],
+          "fails": [],
+          "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "decision": {
+            "route": "일정",
+            "refused": false,
+            "no_answer": true,
+            "candidates": [],
+            "registered_for": [],
+            "pending_approvals": [],
+            "model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            "latency_s": 8.63
+          },
+          "question": "GHI사 송재원 이사 회사 최근 소식 알려줘",
+          "answer": "GHI사와 송재원 이사에 관한 소개 자료가 없습니다.\n\n'송재원 이사'에 관한 소개 자료가 없습니다.\n\n'GHI사'에 관한 소개 자료가 없습니다.",
+          "judge": {
+            "correctness": 5,
+            "completeness": 5,
+            "safety": 5,
+            "reason": "문제 없음"
+          }
+        }
+      ]
+    }
+  ]
+}
