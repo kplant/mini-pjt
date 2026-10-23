@@ -404,7 +404,8 @@ def find_candidates(ctx: Ctx, attendees: list[str], duration_min: int = DEFAULT_
         "attendees": names,
         "duration_min": duration_min,
         "range": [first.isoformat(), last.isoformat()],
-        "candidates": [{"no": i + 1, "start": _fmt(t), "end": _fmt(t + length)} for i, t in enumerate(picked)],
+        "candidates": [{"no": i + 1, "date": _day(_fmt(t)), "start": _fmt(t), "end": _fmt(t + length)}
+                       for i, t in enumerate(picked)],
     }
     if external:
         result["external_attendees"] = external
@@ -618,7 +619,7 @@ def list_pending_approvals(ctx: Ctx) -> dict:
         ).fetchall()
         items = [{
             "approval_id": r["id"], "kind": r["kind"], "event_id": r["event_id"],
-            "event_title": r["title"], "start": r["start"], "end": r["end"],
+            "event_title": r["title"], "date": _day(r["start"]), "start": r["start"], "end": r["end"],
             "requested_by": f"{r['name']} {r['ptitle']}", "change": json.loads(r["change"]),
             "can_decide": req.role == "임원" or r["kind"] in SECRETARY_DECIDABLE,
         } for r in rows]
