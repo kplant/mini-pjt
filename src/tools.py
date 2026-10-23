@@ -93,6 +93,21 @@ def _fmt(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M")
 
 
+WEEKDAYS = "월화수목금토일"
+
+
+def _day(text: str) -> str:
+    """일시 문자열의 날짜와 요일. 예: '2026-10-27(화)'. 답변의 요일이 도구 결과에 근거하도록 코드로 계산합니다."""
+    d = _parse_dt(text).date()
+    return f"{d.isoformat()}({WEEKDAYS[d.weekday()]})"
+
+
+def _range_label(start: datetime, end: datetime) -> str:
+    """조회 기간의 날짜·요일. 끝은 포함하지 않는 시각이라 1분 앞의 날짜를 씁니다."""
+    first, last = _day(_fmt(start)), _day(_fmt(end - timedelta(minutes=1)))
+    return first if first == last else f"{first} ~ {last}"
+
+
 def _parse_dt(text: str) -> datetime:
     """'YYYY-MM-DDTHH:MM' 또는 'YYYY-MM-DD HH:MM'을 datetime으로 바꿉니다."""
     return datetime.fromisoformat(text.strip().replace(" ", "T"))
@@ -187,11 +202,12 @@ def _busy_blocks(conn: sqlite3.Connection, person_id: str) -> list[tuple[datetim
 def _event_view(conn: sqlite3.Connection, req: Requester, ev: sqlite3.Row) -> dict:
     """요청자 권한에 맞춰 일정을 보여 줍니다. 볼 수 없으면 바쁨으로만 보입니다."""
     if not _can_view(conn, req, ev):
-        return {"start": ev["start"], "end": ev["end"], "status": "바쁨"}
+        return {"date": _day(ev["start"]), "start": ev["start"], "end": ev["end"], "status": "바쁨"}
     host = conn.execute("SELECT * FROM people WHERE id = ?", (ev["host"],)).fetchone()
     return {
         "event_id": ev["id"],
         "title": ev["title"],
+        "date": _day(ev["start"]),
         "start": ev["start"],
         "end": ev["end"],
         "host": _label(host),
@@ -257,13 +273,14 @@ def list_events(ctx: Ctx, executive: str, date_from: str, date_to: str | None = 
             if _overlaps(_parse_dt(ev["start"]), _parse_dt(ev["end"]), start, end)
         ]
         items = [_event_view(conn, req, ev) for ev in rows]
+        busy = [{"date": i["date"], "start": i["start"], "end": i["end"]} for i in items]
+        label = _range_label(start, end)
         if not _can_act_for(req, person["id"]):
             return _denied(f"{_label(person)}의 일정 내용은 담당 비서와 본인만 볼 수 있습니다. 바쁨만 안내합니다.",
-                           busy=[{"start": i["start"], "end": i["end"]} for i in items])
+                           date_label=label, busy=busy)
         if items and all(i.get("status") == "바쁨" for i in items):
-            return _denied("비공개 일정이라 내용은 볼 수 없습니다. 바쁨만 안내합니다.",
-                           busy=[{"start": i["start"], "end": i["end"]} for i in items])
-        return {"executive": _label(person), "range": [_fmt(start), _fmt(end)], "events": items}
+            return _denied("비공개 일정이라 내용은 볼 수 없습니다. 바쁨만 안내합니다.", date_label=label, busy=busy)
+        return {"executive": _label(person), "range": [_fmt(start), _fmt(end)], "date_label": label, "events": items}
     finally:
         conn.close()
 
